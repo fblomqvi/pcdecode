@@ -54,22 +54,12 @@ struct pc* init_pc(size_t symsize, size_t gfpoly,
 void free_pc(struct pc* pc);
 
 void encode_pc(struct pc* pc, uint16_t* data);
-int pc_decode_new(struct pc* pc, uint16_t* data, struct stats* s);
 int pc_decode_gmd(struct pc* pc, uint16_t* data, struct stats* s);
 int pc_decode_gd(struct pc* pc, uint16_t* data, struct stats* s);
 int pc_decode_iter(struct pc* pc, uint16_t* data, struct stats* s);
-int pc_decode_iter_eras(struct pc* pc, uint16_t* data, struct stats* s);
+int pc_decode_iter_gd(struct pc* pc, uint16_t* data, struct stats* s);
+int pc_decode_eras(struct pc* pc, uint16_t* data, struct stats* s);
 int pc_decode_eras_gd(struct pc* pc, uint16_t* data, struct stats* s);
-int pc_decode_comb(struct pc* pc, uint16_t* data, struct stats* s);
-
-int pc_decode_new_list(struct pc* pc, const uint16_t* data,
-			uint16_t** list, struct stats* s);
-int pc_decode_comb_list1(struct pc* pc, const uint16_t* data,
-			uint16_t** list, struct stats* s);
-int pc_decode_comb_list2(struct pc* pc, const uint16_t* data,
-			uint16_t** list, struct stats* s);
-int pc_decode_eras_list(struct pc* pc, const uint16_t* data,
-			uint16_t** list, struct stats* s);
 
 void print_pc(FILE* file, const struct pc* pc, const char* prefix);
 

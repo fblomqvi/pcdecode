@@ -120,20 +120,6 @@ static void add_to_estrat(struct pc* pc, size_t col, int weight)
     }
 }
 
-/*
-static int estrat_is_equal(struct estrat* l, struct estrat* r)
-{
-    if (l->size != r->size || l->viable != r->viable)
-	return 0;
-
-    for (size_t i = 0; i < l->size; i++)
-	if (l->strat[i] != r->strat[i])
-	    return 0;
-
-    return 1;
-}
-*/
-
 static void estrat_disable_duplicates(struct pc* pc)
 {
     for (size_t i = 0; i < pc->nstrat - 1; i++) {
@@ -144,25 +130,11 @@ static void estrat_disable_duplicates(struct pc* pc)
 	 * equal if they have the same size */
 	if (pc->es[i].size == pc->es[i+1].size)
 	    pc->es[i].viable = 0;
-	/*
-	if (estrat_is_equal(&pc->es[i], &pc->es[i+1]))
-	    pc->es[i].viable = 0;
-	*/
     }
 }
 static void estrat_remove_unnecessary(struct pc* pc)
 {
-    size_t d = pc->row_code->code->nroots + 1;
-
-    /*
-    for (int i = pc->nstrat - 1; i >= 1; i--) {
-	if (!pc->es[i].viable || !pc->es[i-1].viable || (d - pc->es[i].size) % 2)
-	    continue;
-
-	if (pc->es[i].size == pc->es[i-1].size - 1)
-	    pc->es[i].viable = 0;
-    }
-    */
+    size_t d = rs_mind(pc->row_code);
 
     int i = pc->nstrat - 1;
     do {
@@ -184,6 +156,7 @@ static void estrat_remove_unnecessary(struct pc* pc)
     } while (i > 0);
 }
 
+/*
 static void print_estrats(struct pc* pc)
 {
     for (size_t i = 0; i < pc->nstrat; i++) {
@@ -193,6 +166,7 @@ static void print_estrats(struct pc* pc)
 	printf(" }\n");
     }
 }
+*/
 
 static size_t estrat_count_viable(struct pc* pc)
 {
@@ -204,25 +178,6 @@ static size_t estrat_count_viable(struct pc* pc)
     }
 
     return w;
-}
-
-static void decode_columns(struct pc* pc, uint16_t* data)
-{
-    struct rs_control* rs = pc->col_code;
-
-    reset_estrat(pc);
-
-    //printf("ret for columns:");
-    for (size_t i = 0; i < pc->cols; i++) {
-	int ret = rs_decode(rs, &data[i], pc->rows, pc->cols, NULL, 0, NULL);
-	//printf(" %d", ret);
-	add_to_estrat(pc, i, ret);
-    }
-    //printf("\n");
-
-    estrat_disable_duplicates(pc);
-    estrat_remove_unnecessary(pc);
-    //print_estrats(pc);
 }
 
 static inline double calc_weight(int e, int t, size_t d)
@@ -246,48 +201,6 @@ static void decode_columns_gmd(struct pc* pc, uint16_t* data, double* weights)
     estrat_remove_unnecessary(pc);
 }
 
-static int decode_rows(struct pc* pc, struct estrat* es,
-			uint16_t* data, struct stats* s)
-{
-    struct rs_control* rs = pc->row_code;
-    uint16_t* end = data + pc_len(pc);
-
-    //printf("ret for rows:");
-    for (uint16_t* ptr = data; ptr < end; ptr += pc->cols) {
-	s->rdec++;
-	int ret = rs_decode(rs, ptr, pc->cols, 1, es->strat, es->size, NULL);
-	//printf(" %d", ret);
-	if (ret < 0) {
-	    //printf("\n");
-	    return -1;
-	}
-    }
-    //printf("\n");
-
-    return 0;
-}
-
-static size_t weight_diff(uint16_t* l, uint16_t* r, size_t len)
-{
-    size_t w = 0;
-    for (size_t i = 0; i < len; i++)
-	w += (l[i] != r[i]);
-
-    return w;
-}
-
-static int cols_are_codewords(struct pc* pc, uint16_t* data)
-{
-    struct rs_control* rs = pc->col_code;
-
-    for (size_t i = 0; i < pc->cols; i++) {
-	if (!rs_is_cword(rs, &data[i], pc->rows, pc->cols))
-	    return 0;
-    }
-
-    return 1;
-}
-
 static double calc_gdm(const double* weights, size_t len,
 			const int* errpos, int nerr)
 {
@@ -302,106 +215,6 @@ static double calc_gdm(const double* weights, size_t len,
 	sum += errs[i] ? weights[i] : -weights[i];
 
     return sum;
-}
-
-int pc_decode_new(struct pc* pc, uint16_t* data, struct stats* s)
-{
-    size_t t = (pc_mind(pc) - 1) / 2;
-    size_t len = pc_len(pc);
-    uint16_t* x = pc->x_buf;
-    uint16_t* y = pc->y_buf;
-
-    memcpy(x, data, len * sizeof(*x));
-    decode_columns(pc, x);
-
-    //estrat_remove_unnecessary(pc);
-    size_t viable = estrat_count_viable(pc);
-    /*
-    if (viable == pc->nstrat) {
-	printf("Max viable:\n");
-	print_estrats(pc);
-    }
-    */
-
-    s->viable += viable;
-    //s->viable += estrat_count_viable(pc);
-    s->cdec += pc->cols;
-    s->max += pc->nstrat;
-    s->rdec_max += pc->nstrat * pc->rows;
-
-    for (int i = pc->nstrat - 1; i >= 0; i--) {
-	struct estrat* es = &pc->es[i];
-
-	if (!es->viable)
-	    continue;
-
-	s->used++;
-	/*
-	if (viable == pc->nstrat)
-	    printf("processing strat %i\n", i);
-	*/
-
-	memcpy(y, x, len * sizeof(*x));
-
-	int ret = decode_rows(pc, es, y, s);
-	if (ret)
-	    continue;
-
-	/* Check that we decoded to a codeword */
-	if (!cols_are_codewords(pc, y))
-	    continue;
-
-	size_t w = weight_diff(y, data, len);
-	//printf("w: %zu\n", w);
-	if (w <= t) {
-	    memcpy(data, y, len * sizeof(*y));
-	    return w;
-	}
-    }
-
-    return -1;
-}
-
-/* list must have size at least pc->nstrat
- *
- * returns the number of candidates stored in the list */
-int pc_decode_new_list(struct pc* pc, const uint16_t* data,
-			uint16_t** list, struct stats* s)
-{
-    size_t len = pc_len(pc);
-    uint16_t* x = pc->x_buf;
-    uint16_t* y = pc->y_buf;
-
-    memcpy(x, data, len * sizeof(*x));
-    decode_columns(pc, x);
-
-    s->viable += estrat_count_viable(pc);
-    s->cdec += pc->cols;
-    s->max += pc->nstrat;
-    s->rdec_max += pc->nstrat * pc->rows;
-
-    size_t j = 0;
-    for (int i = pc->nstrat - 1; i >= 0; i--) {
-	struct estrat* es = &pc->es[i];
-
-	if (!es->viable)
-	    continue;
-
-	s->used++;
-	memcpy(y, x, len * sizeof(*x));
-
-	int ret = decode_rows(pc, es, y, s);
-	if (ret)
-	    continue;
-
-	/* Check that we decoded to a codeword */
-	if (!cols_are_codewords(pc, y))
-	    continue;
-
-	memcpy(list[j++], y, len * sizeof(*y));
-    }
-
-    return j;
 }
 
 int pc_decode_gmd(struct pc* pc, uint16_t* data, struct stats* s)
@@ -552,7 +365,7 @@ int pc_decode_iter(struct pc* pc, uint16_t* data, struct stats* s)
     return fail;
 }
 
-int pc_decode_iter_eras(struct pc* pc, uint16_t* data, struct stats* s)
+int pc_decode_eras(struct pc* pc, uint16_t* data, struct stats* s)
 {
     int ret = pc_decode_iter(pc, data, s);
     if (!ret)
@@ -646,12 +459,12 @@ int pc_decode_iter_eras(struct pc* pc, uint16_t* data, struct stats* s)
     return fail;
 }
 
-int pc_decode_comb(struct pc* pc, uint16_t* data, struct stats* s)
+int pc_decode_iter_gd(struct pc* pc, uint16_t* data, struct stats* s)
 {
     int ret = pc_decode_iter(pc, data, s);
     if (ret) {
 	s->alg2++;
-	ret = pc_decode_new(pc, data, s);
+	ret = pc_decode_gd(pc, data, s);
     }
 
     return ret;
@@ -659,58 +472,12 @@ int pc_decode_comb(struct pc* pc, uint16_t* data, struct stats* s)
 
 int pc_decode_eras_gd(struct pc* pc, uint16_t* data, struct stats* s)
 {
-    int ret = pc_decode_iter_eras(pc, data, s);
+    int ret = pc_decode_eras(pc, data, s);
     if (ret) {
 	s->alg3++;
 	ret = pc_decode_gd(pc, data, s);
     }
 
-    return ret;
-}
-
-/* list must have size at least pc->nstrat + 1
- *
- * returns the number of candidates stored in the list */
-int pc_decode_comb_list1(struct pc* pc, const uint16_t* data,
-			uint16_t** list, struct stats* s)
-{
-    size_t len = pc_len(pc);
-    memcpy(list[0], data, len * sizeof(list[0]));
-    int ret = pc_decode_iter(pc, list[0], s);
-    if (!ret)
-	return 1;
-
-    s->alg2++;
-    ret = pc_decode_new_list(pc, data, list, s);
-    return ret;
-}
-
-int pc_decode_comb_list2(struct pc* pc, const uint16_t* data,
-			uint16_t** list, struct stats* s)
-{
-    size_t len = pc_len(pc);
-    memcpy(list[0], data, len * sizeof(list[0]));
-    int fail = pc_decode_iter(pc, list[0], s);
-    if (!fail)
-	return 1 + pc_decode_new_list(pc, data, list + 1, s);
-    else
-	return pc_decode_new_list(pc, data, list, s);
-}
-
-/* list must have size at least pc->nstrat + 1
- *
- * returns the number of candidates stored in the list */
-int pc_decode_eras_list(struct pc* pc, const uint16_t* data,
-			uint16_t** list, struct stats* s)
-{
-    size_t len = pc_len(pc);
-    memcpy(list[0], data, len * sizeof(list[0]));
-    int ret = pc_decode_iter_eras(pc, list[0], s);
-    if (!ret)
-	return 1;
-
-    s->alg3++;
-    ret = pc_decode_new_list(pc, data, list, s);
     return ret;
 }
 

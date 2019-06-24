@@ -78,7 +78,7 @@ static void parse_cmdline(int argc, char* const argv[], struct options* opt)
 
 	// Setting default options
 	*opt = (struct options) {
-		.alg.std = pc_decode_new, .list = 0,
+		.alg.std = pc_decode_gmd, .list = 0,
 		.nthreads = 1,
 		.symsize = 0, .gfpoly = 0,
 		.rows = 0, .cols = 0,
@@ -101,10 +101,7 @@ static void parse_cmdline(int argc, char* const argv[], struct options* opt)
 		{
 		case 'a':
 		{
-			if (!strcmp(optarg, "new")) {
-				opt->alg.std = pc_decode_new;
-				opt->list = 0;
-			} else if (!strcmp(optarg, "gmd")) {
+			if (!strcmp(optarg, "gmd")) {
 				opt->alg.std = pc_decode_gmd;
 				opt->list = 0;
 			} else if (!strcmp(optarg, "gd")) {
@@ -113,27 +110,15 @@ static void parse_cmdline(int argc, char* const argv[], struct options* opt)
 			} else if (!strcmp(optarg, "iter")) {
 				opt->alg.std = pc_decode_iter;
 				opt->list = 0;
-			} else if (!strcmp(optarg, "comb")) {
-				opt->alg.std = pc_decode_comb;
+			} else if (!strcmp(optarg, "itergd")) {
+				opt->alg.std = pc_decode_iter_gd;
 				opt->list = 0;
 			} else if (!strcmp(optarg, "eras")) {
-				opt->alg.std = pc_decode_iter_eras;
+				opt->alg.std = pc_decode_eras;
 				opt->list = 0;
 			} else if (!strcmp(optarg, "erasgd")) {
 				opt->alg.std = pc_decode_eras_gd;
 				opt->list = 0;
-			} else if (!strcmp(optarg, "nlist")) {
-				opt->alg.list = pc_decode_new_list;
-				opt->list = 1;
-			} else if (!strcmp(optarg, "clist1")) {
-				opt->alg.list = pc_decode_comb_list1;
-				opt->list = 1;
-			} else if (!strcmp(optarg, "clist2")) {
-				opt->alg.list = pc_decode_comb_list2;
-				opt->list = 1;
-			} else if (!strcmp(optarg, "elist")) {
-				opt->alg.list = pc_decode_eras_list;
-				opt->list = 1;
 			} else {
 				check(0, "invalid argument to option '%c': '%s'", ch, optarg);
 			}

@@ -72,7 +72,7 @@ static void parse_cmdline(int argc, char* const argv[], struct options* opt)
 
 	// Setting default options
 	*opt = (struct options) {
-		.alg = pc_decode_new,
+		.alg = pc_decode_gmd,
 		.nthreads = 1,
 		.symsize = 0, .gfpoly = 0,
 		.rows = 0, .cols = 0,
@@ -92,18 +92,18 @@ static void parse_cmdline(int argc, char* const argv[], struct options* opt)
 		{
 		case 'a':
 		{
-			if (!strcmp(optarg, "new"))
-				opt->alg = pc_decode_new;
-			else if (!strcmp(optarg, "gmd"))
+			if (!strcmp(optarg, "gmd"))
 				opt->alg = pc_decode_gmd;
 			else if (!strcmp(optarg, "gd"))
 				opt->alg = pc_decode_gd;
 			else if (!strcmp(optarg, "iter"))
 				opt->alg = pc_decode_iter;
-			else if (!strcmp(optarg, "comb"))
-				opt->alg = pc_decode_comb;
+			else if (!strcmp(optarg, "itergd"))
+				opt->alg = pc_decode_iter_gd;
 			else if (!strcmp(optarg, "eras"))
-				opt->alg = pc_decode_iter_eras;
+				opt->alg = pc_decode_eras;
+			else if (!strcmp(optarg, "erasgd"))
+				opt->alg = pc_decode_eras_gd;
 			else
 				check(0, "invalid argument to option '%c': '%s'", ch, optarg);
 			opt->alg_name = optarg;
