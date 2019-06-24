@@ -107,11 +107,8 @@ static void parse_cmdline(int argc, char* const argv[], struct options* opt)
 			} else if (!strcmp(optarg, "gmd")) {
 				opt->alg.std = pc_decode_gmd;
 				opt->list = 0;
-			} else if (!strcmp(optarg, "gd1")) {
-				opt->alg.std = pc_decode_gd1;
-				opt->list = 0;
-			} else if (!strcmp(optarg, "gd2")) {
-				opt->alg.std = pc_decode_gd2;
+			} else if (!strcmp(optarg, "gd")) {
+				opt->alg.std = pc_decode_gd;
 				opt->list = 0;
 			} else if (!strcmp(optarg, "iter")) {
 				opt->alg.std = pc_decode_iter;

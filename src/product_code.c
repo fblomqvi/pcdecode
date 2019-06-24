@@ -456,59 +456,7 @@ int pc_decode_gmd(struct pc* pc, uint16_t* data, struct stats* s)
     return 0;
 }
 
-int pc_decode_gd1(struct pc* pc, uint16_t* data, struct stats* s)
-{
-    size_t len = pc_len(pc);
-    uint16_t* x = pc->x_buf;
-    uint16_t* y = pc->y_buf;
-    double weights[pc->cols];
-
-    memcpy(x, data, len * sizeof(*x));
-    decode_columns_gmd(pc, x, weights);
-
-    size_t viable = estrat_count_viable(pc);
-    s->viable += viable;
-    s->cdec += pc->cols;
-    s->max += pc->nstrat;
-    s->rdec_max += pc->nstrat * pc->rows;
-
-    if (viable == 0)
-	return -1;
-
-    struct rs_control* rs = pc->row_code;
-    int errors[rs->code->nroots];
-
-    int last = 0;
-    while (!pc->es[last].viable)
-	last++;
-
-    for (size_t r = 0; r < pc->rows; r++) {
-	for (int i = pc->nstrat - 1; i >= 0; i--) {
-	    struct estrat* es = &pc->es[i];
-
-	    if (!es->viable)
-		continue;
-
-	    // Copy row before decoding
-	    memcpy(y, x + r * pc->cols, pc->cols * sizeof(*x));
-	    s->rdec++;
-
-	    int ret = rs_decode(rs, y, pc->cols, 1, es->strat, es->size, errors);
-	    if (ret < 0)
-		continue;
-
-	    double dist = calc_gdm(weights, pc->cols, errors, ret);
-	    if (dist < rs->code->nroots + 1 || i == last) {
-		memcpy(data + r * pc->cols, y, pc->cols * sizeof(*y));
-		break;
-	    }
-	}
-    }
-
-    return 0;
-}
-
-int pc_decode_gd2(struct pc* pc, uint16_t* data, struct stats* s)
+int pc_decode_gd(struct pc* pc, uint16_t* data, struct stats* s)
 {
     size_t len = pc_len(pc);
     uint16_t* x = pc->x_buf;
@@ -714,7 +662,7 @@ int pc_decode_eras_gd(struct pc* pc, uint16_t* data, struct stats* s)
     int ret = pc_decode_iter_eras(pc, data, s);
     if (ret) {
 	s->alg3++;
-	ret = pc_decode_gd2(pc, data, s);
+	ret = pc_decode_gd(pc, data, s);
     }
 
     return ret;
