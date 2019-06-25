@@ -40,7 +40,7 @@ struct pc* init_pc(size_t symsize, size_t gfpoly,
     if (!pc->col_code)
 	goto err;
 
-    pc->nstrat = (rs_mind(pc->col_code) - 1) / 2 + 1;
+    pc->nstrat = (rs_mind(pc->col_code) + 1) / 2;
     pc->es = malloc(pc->nstrat * sizeof(*pc->es));
     if (!pc->es)
 	goto err;
@@ -60,6 +60,10 @@ struct pc* init_pc(size_t symsize, size_t gfpoly,
     pc->y_buf = pc->x_buf + rows * cols;
     pc->rows = rows;
     pc->cols = cols;
+
+    size_t tmp  = (rs_mind(pc->row_code) + 1) / 2;
+    pc->nstrat_bound = tmp < pc->nstrat ? tmp : pc->nstrat;
+
     return pc;
 
 err:
@@ -227,11 +231,14 @@ int pc_decode_gmd(struct pc* pc, uint16_t* data, struct stats* s)
     memcpy(x, data, len * sizeof(*x));
     decode_columns_gmd(pc, x, weights);
 
-    s->viable += estrat_count_viable(pc);
+    size_t viable = estrat_count_viable(pc);
+    s->viable += viable;
     s->cdec += pc->cols;
-    s->max += pc->nstrat;
-    s->rdec_max += pc->nstrat * pc->rows;
+    s->max += pc->nstrat_bound;
+    s->rdec_max += (pc->nstrat_bound - 1) + pc->rows;
 
+    if (viable == 0)
+	return -1;
 
     struct rs_control* rs = pc->row_code;
     int errors[rs->code->nroots];
@@ -283,8 +290,8 @@ int pc_decode_gd(struct pc* pc, uint16_t* data, struct stats* s)
     size_t viable = estrat_count_viable(pc);
     s->viable += viable;
     s->cdec += pc->cols;
-    s->max += pc->nstrat;
-    s->rdec_max += pc->nstrat * pc->rows;
+    s->max += pc->nstrat_bound;
+    s->rdec_max += pc->nstrat_bound * pc->rows;
 
     if (viable == 0)
 	return -1;

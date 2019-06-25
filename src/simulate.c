@@ -82,7 +82,6 @@ static void print_start(FILE* file, struct pc* pc,
 		"number of codewords",
 		"algorithm 2",
 		"algorithm 3",
-		"strategies used",
 		"viable strategies",
 		"max strategies",
 		"row decoder actual",
@@ -103,8 +102,8 @@ static void print_start(FILE* file, struct pc* pc,
 
 static void print_stats(FILE* file, struct stats* s, double p)
 {
-	fprintf(file, "%f %zu %zu %zu %zu %zu %zu %zu %zu %zu %zu %zu %zu\n",
-		p, s->nwords, s->alg2, s->alg3, s->used,
+	fprintf(file, "%f %zu %zu %zu %zu %zu %zu %zu %zu %zu %zu %zu\n",
+		p, s->nwords, s->alg2, s->alg3,
 		s->viable, s->max, s->rdec, s->rdec_max,
 		s->cdec, s->dwrong, s->rfail, s->cfail);
 	fflush(file);
@@ -238,20 +237,20 @@ err:
 	return -1;
 }
 
+static void set_args(struct thread_args* args, size_t nthreads,
+			double p, size_t trials, size_t min_errs)
+{
+	for (size_t i = 0; i < nthreads; i++) {
+		args[i].p = p;
+		args[i].trials = trials;
+		args[i].min_errs = min_errs;
+	}
+}
+
 static void consolidate_stats(struct thread_args* args, int nthreads)
 {
-	for (int i = 1; i < nthreads; i++) {
-		args[0].s.nwords += args[i].s.nwords;
-		args[0].s.used += args[i].s.used;
-		args[0].s.viable += args[i].s.viable;
-		args[0].s.max += args[i].s.max;
-		args[0].s.rdec += args[i].s.rdec;
-		args[0].s.rdec_max += args[i].s.rdec_max;
-		args[0].s.cdec += args[i].s.cdec;
-		args[0].s.dwrong += args[i].s.dwrong;
-		args[0].s.rfail += args[i].s.rfail;
-		args[0].s.cfail += args[i].s.cfail;
-	}
+	for (int i = 1; i < nthreads; i++)
+		stats_add(&args[0].s, & args[i].s);
 
 	print_stats(stdout, &args[0].s, args[0].p);
 }
@@ -260,22 +259,17 @@ static int test_mt(struct thread_args* args, size_t nthreads, double p,
 		size_t trials, size_t min_errs, double fer_cutoff)
 {
 	pthread_t thr[nthreads-1];
+
+	set_args(args, nthreads, p, trials, min_errs);
 	for (size_t i = 0; i < nthreads-1; i++) {
-		args[i].p = p;
-		args[i].trials = trials;
-		args[i].min_errs = min_errs;
 		int rc = pthread_create(thr + i, NULL, test_uc_thread, &args[i]);
 		if (rc)
 			fprintf(stderr, "error: pthread_create, rc: %d\n", rc);
 	}
 
-	args[nthreads-1].p = p;
-	args[nthreads-1].trials = trials;
-	args[nthreads-1].min_errs = min_errs;
 	test_uc_thread(&args[nthreads-1]);
-	for (size_t i = 0; i < nthreads-1; i++) {
+	for (size_t i = 0; i < nthreads-1; i++)
 		pthread_join(thr[i], NULL);
-	}
 
 	consolidate_stats(args, nthreads);
 

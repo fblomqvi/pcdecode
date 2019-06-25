@@ -14,6 +14,7 @@ struct pc {
     size_t rows;
     size_t cols;
     size_t nstrat;
+    size_t nstrat_bound;
 
     struct estrat* es;
     int* es_buffer;
@@ -24,7 +25,6 @@ struct pc {
 
 struct stats {
     size_t nwords;
-    size_t used;
     size_t viable;
     size_t max;
     size_t rdec;
@@ -36,6 +36,21 @@ struct stats {
     size_t alg2;
     size_t alg3;
 };
+
+static inline void stats_add(struct stats* l, const struct stats* r)
+{
+	l->nwords += r->nwords;
+	l->viable += r->viable;
+	l->max += r->max;
+	l->rdec += r->rdec;
+	l->rdec_max += r->rdec_max;
+	l->cdec += r->cdec;
+	l->dwrong += r->dwrong;
+	l->rfail += r->rfail;
+	l->cfail += r->cfail;
+	l->alg2 += r->alg2;
+	l->alg3 += r->alg3;
+}
 
 size_t get_gfpoly(size_t symsize);
 
@@ -54,6 +69,7 @@ struct pc* init_pc(size_t symsize, size_t gfpoly,
 void free_pc(struct pc* pc);
 
 void encode_pc(struct pc* pc, uint16_t* data);
+
 int pc_decode_gmd(struct pc* pc, uint16_t* data, struct stats* s);
 int pc_decode_gd(struct pc* pc, uint16_t* data, struct stats* s);
 int pc_decode_iter(struct pc* pc, uint16_t* data, struct stats* s);
