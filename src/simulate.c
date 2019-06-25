@@ -297,6 +297,11 @@ int run_simulation(struct options* opt)
 		if (test_mt(args, opt->nthreads, p, trials,
 				min_errs, opt->fer_cutoff))
 		    break;
+
+		if (opt->p_halve_at - p >= -10E-10) {
+			opt->p_step /= 2;
+			opt->p_halve_at = 0.0;
+		}
 	}
 
 	free_stuff(args, opt->nthreads);

@@ -22,6 +22,7 @@ struct options {
 	double p_start;
 	double p_stop;
 	double p_step;
+	double p_halve_at;
 	size_t rows;
 	size_t cols;
 	size_t symsize;

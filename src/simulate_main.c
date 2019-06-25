@@ -74,7 +74,7 @@ static int print_help(FILE* file)
 
 static void parse_cmdline(int argc, char* const argv[], struct options* opt)
 {
-	static const char* optstring = "a:n:c:r:R:S:s:b:e:t:E:f:T:";
+	static const char* optstring = "a:n:c:r:R:S:s:b:e:t:h:E:f:T:";
 	static struct option longopt[] = {
 		{"algorithm", required_argument, NULL, 'a'},
 		{"num-words", required_argument, NULL, 'n'},
@@ -88,10 +88,11 @@ static void parse_cmdline(int argc, char* const argv[], struct options* opt)
 		{"p-begin", required_argument, NULL, 'b'},
 		{"p-end", required_argument, NULL, 'e'},
 		{"p-step", required_argument, NULL, 't'},
+		{"p-halve-at", required_argument, NULL, 'h'},
 		{"rng", required_argument, NULL, 'R'},
 		{"seed", required_argument, NULL, 'S'},
 		{"sym-size", required_argument, NULL, 's'},
-		{"help", no_argument, NULL, 'h'},
+		{"help", no_argument, NULL, 'H'},
 		{"version", no_argument, NULL, 'V'},
 		{0, 0, 0, 0}
 	};
@@ -108,7 +109,7 @@ static void parse_cmdline(int argc, char* const argv[], struct options* opt)
 		.cword_num = 0, .seed = 0,
 		.min_errs = 100, .fer_cutoff = 1E-8,
 		.p_start = 0.1, .p_stop = 0.01,
-		.p_step = 0.01,
+		.p_step = 0.01, .p_halve_at = 0.0,
 		.rng_type = gsl_rng_default
 	};
 
@@ -194,6 +195,12 @@ static void parse_cmdline(int argc, char* const argv[], struct options* opt)
 				&& !(errno == ERANGE && opt->p_step == HUGE_VAL),
 				"invalid argument to option '%c': '%s'", ch, optarg);
 			break;
+		case 'h':
+			opt->p_halve_at = strtod(optarg, &endptr);
+			check(*endptr == '\0' && opt->p_halve_at >= 0
+				&& !(errno == ERANGE && opt->p_halve_at == HUGE_VAL),
+				"invalid argument to option '%c': '%s'", ch, optarg);
+			break;
 		case 'R':
 		{
 			const gsl_rng_type** rng_types = gsl_rng_types_setup();
@@ -237,7 +244,7 @@ static void parse_cmdline(int argc, char* const argv[], struct options* opt)
 				&& !(errno == ERANGE && opt->nthreads == ULONG_MAX),
 				"invalid argument to option '%c': '%s'", ch, optarg);
 			break;
-		case 'h':
+		case 'H':
 			exit(print_help(stdout));
 		case 'V':
 			exit(print_version(stdout));
