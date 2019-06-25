@@ -82,7 +82,7 @@ static void print_start(FILE* file, struct pc* pc,
 		"reported failures",
 	};
 
-	print_pc(file, pc, prefix);
+	pc_print(file, pc, prefix);
 	fprintf(file, "%sAlgorithm: %s\n", prefix, alg);
 	fprintf(file, "%sSeed: %lu\n", prefix, seed);
 	fprintf(file, "%sThreads: %zu\n", prefix, nthreads);
@@ -166,7 +166,7 @@ static void* test_uc_thread(void* arg)
 static void free_stuff(struct thread_args* args, int nthreads)
 {
 	for (int i = 0; i < nthreads; i++) {
-		free_pc(args[i].pc);
+		pc_free(args[i].pc);
 		free_ws(args[i].ws);
 		gsl_rng_free(args[i].rng);
 	}
@@ -177,7 +177,7 @@ static int alloc_stuff(struct thread_args* args, int nthreads, struct options* o
 	memset(args, 0, nthreads * sizeof(*args));
 
 	for (int i = 0; i < nthreads; i++) {
-		args[i].pc = init_pc(opt->symsize, opt->gfpoly, opt->r_fcr,
+		args[i].pc = pc_init(opt->symsize, opt->gfpoly, opt->r_fcr,
 				opt->r_prim, opt->r_nroots, opt->c_fcr,
 				opt->c_prim, opt->c_nroots, opt->rows, opt->cols);
 		if (!args[i].pc)

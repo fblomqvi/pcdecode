@@ -20,7 +20,7 @@ size_t get_gfpoly(size_t symsize)
     return gfpolys[symsize - 2];
 }
 
-struct pc* init_pc(size_t symsize, size_t gfpoly,
+struct pc* pc_init(size_t symsize, size_t gfpoly,
 			size_t r_fcr, size_t r_prim, size_t r_nroots,
 			size_t c_fcr, size_t c_prim, size_t c_nroots,
 			size_t rows, size_t cols)
@@ -75,7 +75,7 @@ err:
     return NULL;
 }
 
-void free_pc(struct pc* pc)
+void pc_free(struct pc* pc)
 {
     if (!pc)
 	return;
@@ -88,7 +88,7 @@ void free_pc(struct pc* pc)
     free(pc);
 }
 
-void encode_pc(struct pc* pc, uint16_t* data)
+void pc_encode(struct pc* pc, uint16_t* data)
 {
     size_t row_dlen = pc->cols - pc->row_code->code->nroots;
     for (size_t i = 0; i < row_dlen; i++)
@@ -488,7 +488,7 @@ int pc_decode_eras_gd(struct pc* pc, uint16_t* data, struct stats* s)
     return ret;
 }
 
-void print_pc(FILE* file, const struct pc* pc, const char* prefix)
+void pc_print(FILE* file, const struct pc* pc, const char* prefix)
 {
 
     size_t nn = pc->row_code->code->nn;

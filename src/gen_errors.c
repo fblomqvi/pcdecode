@@ -14,7 +14,7 @@ static void gen_random_cword(struct pc *pc, uint16_t* c,
 		for (int i = 0; i < rdlen; i++)
 			c[j * pc->cols + i] = gsl_rng_get(rng) & nn;
 
-	encode_pc(pc, c);
+	pc_encode(pc, c);
 }
 
 /*
