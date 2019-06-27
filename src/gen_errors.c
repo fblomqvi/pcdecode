@@ -48,7 +48,7 @@ void get_rcw_we(struct pc *pc, uint16_t* c, uint16_t* r,
 
 		do {
 			/* Must not choose the same location twice */
-			errloc = gsl_rng_get(rng) % len;
+			errloc = gsl_rng_uniform_int(rng, len);
 		} while (errlocs[errloc] != 0);
 
 		errlocs[errloc] = 1;
