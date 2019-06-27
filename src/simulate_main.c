@@ -1,4 +1,4 @@
-/* A program that generates random points in Euclidian space.
+/* Channel simulations with product codes.
    Copyright (C) 2019 Ferdinand Blomqvist
 
    This program is free software: you can redistribute it and/or modify it
@@ -33,22 +33,42 @@
 static int print_help(FILE* file)
 {
     static const char* formatstr =
-"Usage: %s [OPTION]...\n"
-"  or:  %s [OPTION]... OUTPUT\n\n%s\n";
+"Usage: %s [OPTION]...\n\n%s\n";
 
     static const char* helpstr =
-"Generates random points in Euclidean space. Outputs to stdout\n"
-"if no output file is given.\n\n"
+"Run simulation with product codes. The component codes are Reed-Solomon\n"
+"codes over fields of size 2^m and the channel is a q-ary symmetric\n"
+"channel. Outputs to stdout\n\n"
 "Mandatory arguments to long options are mandatory for short options too.\n"
-"  -n, --num-points=NUM         The number of codewords to generate. Zero (0) makes the\n"
-"                                 encoder run until it is killed.\n"
-"  -r, --rng=RNG                The random number generator to use. To see a list of all\n"
+"  -a, --algorithm=ALG		The decoding algorithm to use. Valid values\n"
+"                                 are gmd, gd, iter, itergd, eras, erasgd.\n"
+"  -c, --cols=NUM               The number of columns in the codeword.\n"
+"  -r, --rows=NUM               The number of rows in the codeword.\n"
+"      --c-nroots=NUM           The number of roots in the oulumn code.\n"
+"                                 The minimum distance of the column code\n"
+"                                 is NUM + 1.\n"
+"      --r-nroots=NUM           The number of roots in the row code. The\n"
+"                                 minimum distance of the row code is\n"
+"                                 NUM + 1.\n"
+"  -f, --fer-cutoff=VAL         The frame error rate cutoff. Set to zero\n"
+"                                 disable.\n"
+"  -E, --min-errors=NUM         The minimum number of decoding errors per\n"
+"                                 channel quality.\n"
+"  -n, --num-words=NUM          The minimum number of words to decode.\n"
+"  -b, --p-begin=VAL            The initial value of p.\n"
+"  -e, --p-end=VAL              The last value of p. The simulation will run\n"
+"                                 until this value is reached, unless the\n"
+"                                 frame error rate cutoff is reached first.\n"
+"  -t, --p-step=VAL             The step size when decreasing the value of p.\n"
+"  -R, --rng=RNG                The random number generator to use. To see a list of all\n"
 "                                 available generators give 'list' as argument.\n"
+"  -s, --sym-size=NUM           The symbol size in bits.\n"
 "  -S, --seed=SEED              The seed for the random number generator.\n"
+"  -T, --threads=NUM            Number of computational threads to use.\n"
 "      --help                   Display this help and exit.\n"
-"      --version                Output version information and exit.\n\n";
+"      --version                Output version information and exit.\n";
 
-    return (fprintf(file, formatstr, PROGRAM_NAME, PROGRAM_NAME, helpstr) < 0)
+    return (fprintf(file, formatstr, PROGRAM_NAME, helpstr) < 0)
                 ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
@@ -252,7 +272,7 @@ int main(int argc, char* argv[])
 {
 	struct options opt;
 	int ret = EXIT_FAILURE;
-	argv[0] = PROGRAM_NAME = "rnd-point";
+	PROGRAM_NAME = argv[0];
 
 	gsl_set_error_handler_off();
 	parse_cmdline(argc, argv, &opt);
