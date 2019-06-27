@@ -86,7 +86,7 @@ static void parse_cmdline(int argc, char* const argv[], struct options* opt)
 		.r_fcr = 1, .c_fcr = 1,
 		.r_prim = 1, .c_prim = 1,
 		.cword_num = 0, .seed = 0,
-		.min_errs = 50, .fer_cutoff = 10E-8,
+		.min_errs = 100, .fer_cutoff = 1E-8,
 		.p_start = 0.1, .p_stop = 0.01,
 		.p_step = 0.01,
 		.rng_type = gsl_rng_default
