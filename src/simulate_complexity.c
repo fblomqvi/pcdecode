@@ -114,22 +114,24 @@ static void print_matrix(uint16_t* data, size_t rows, size_t cols, int nn)
 */
 
 /* Test up to error correction capacity */
-static int test_uc(struct pc *pc, int errs,
-		int trials, struct wspace *ws,
-		struct stats* s, const gsl_rng* rng,
-		int (*decode)(struct pc*, uint16_t*, struct stats*))
+static int test_uc(struct thread_args* args)
 {
+	int trials = args->trials;
+	int errs = args->errs;
+	struct stats* s = &args->s;
+	struct pc* pc = args->pc;
+	struct wspace* ws = args->ws;
+	int *errlocs = ws->errlocs;
 	uint16_t *c = ws->c;
 	uint16_t *r = ws->r;
-	int *errlocs = ws->errlocs;
 	int len = pc_len(pc);
 
 	memset(s, 0, sizeof(*s));
 
 	for (int j = 0; j < trials; j++) {
-		get_rcw_we(pc, c, r, errs, errlocs, rng);
+		get_rcw_we(pc, c, r, errs, errlocs, args->rng);
 		//memcpy(ws->r_cpy, r, len * sizeof(*r));
-		int derrs = decode(pc, r, s);
+		int derrs = args->decode(pc, r, s);
 
 		if (derrs < 0)
 			s->rfail++;
@@ -152,9 +154,7 @@ static int test_uc(struct pc *pc, int errs,
 static void* test_uc_thread(void* arg)
 {
 	struct thread_args* args = arg;
-	int retval = test_uc(args->pc, args->errs, args->trials,
-				args->ws, &args->s, args->rng,
-				args->decode);
+	int retval = test_uc(args);
 	/*
 	if (retval)
 		printf("  FAIL: %d decoding failures!\n", retval);
