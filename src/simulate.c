@@ -110,11 +110,14 @@ static void print_stats(FILE* file, struct stats* s, double p)
 }
 
 /* Test up to error correction capacity */
-static int test_normal(struct pc *pc, double p,
-		size_t trials, size_t min_errs, struct wspace *ws,
-		struct stats* s, const gsl_rng* rng,
-		int (*decode)(struct pc*, uint16_t*, struct stats*))
+static int test_normal(struct thread_args* args)
 {
+	int (*decode)(struct pc*, uint16_t*, struct stats*) = args->alg.std;
+	size_t min_errs = args->min_errs;
+	size_t trials = args->trials;
+	struct stats* s = &args->s;
+	struct pc* pc = args->pc;
+	struct wspace* ws = args->ws;
 	uint16_t *c = ws->c;
 	uint16_t *r = ws->r;
 	int len = pc_len(pc);
@@ -124,7 +127,7 @@ static int test_normal(struct pc *pc, double p,
 
 	size_t j;
 	for (j = 0; j < trials || s->dwrong < min_errs; j++) {
-		int errs = get_rcw_channel(pc, c, r, p, rng);
+		int errs = get_rcw_channel(pc, c, r, args->p, args->rng);
 		int derrs = decode(pc, r, s);
 
 		if (derrs < 0)
@@ -152,11 +155,13 @@ static int decodes_correct_list(const uint16_t* c, size_t len,
 	return 0;
 }
 
-static int test_list(struct pc *pc, double p,
-		size_t trials, size_t min_errs, struct wspace *ws,
-		struct stats* s, const gsl_rng* rng,
-		int (*decode)(struct pc*, const uint16_t*, uint16_t**, struct stats*))
+static int test_list(struct thread_args* args)
 {
+	size_t min_errs = args->min_errs;
+	size_t trials = args->trials;
+	struct stats* s = &args->s;
+	struct pc* pc = args->pc;
+	struct wspace* ws = args->ws;
 	uint16_t *c = ws->c;
 	uint16_t *r = ws->r;
 	uint16_t **list = ws->list;
@@ -167,8 +172,8 @@ static int test_list(struct pc *pc, double p,
 
 	size_t j;
 	for (j = 0; j < trials || s->dwrong < min_errs; j++) {
-		int errs = get_rcw_channel(pc, c, r, p, rng);
-		int list_len = decode(pc, r, list, s);
+		int errs = get_rcw_channel(pc, c, r, args->p, args->rng);
+		int list_len = args->alg.list(pc, r, list, s);
 
 		if (!decodes_correct_list(c, len, list, list_len)) {
 			s->dwrong++;
@@ -184,15 +189,11 @@ static int test_list(struct pc *pc, double p,
 static void* test_uc_thread(void* arg)
 {
 	struct thread_args* args = arg;
-	if (args->list) {
-		args->retval = test_list(args->pc, args->p, args->trials,
-					args->min_errs, args->ws, &args->s,
-					args->rng, args->alg.list);
-	} else {
-		args->retval = test_normal(args->pc, args->p, args->trials,
-					args->min_errs, args->ws, &args->s,
-					args->rng, args->alg.std);
-	}
+	if (args->list)
+		args->retval = test_list(args);
+	else
+		args->retval = test_normal(args);
+
 	return NULL;
 }
 
