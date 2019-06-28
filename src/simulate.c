@@ -24,6 +24,7 @@
 #include <errno.h>
 #include <time.h>
 #include <omp.h>
+#include <stdatomic.h>
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
@@ -116,17 +117,17 @@ static void print_start(FILE* file, struct pc* pc,
 		fprintf(file, "%s(%zu) %s\n", prefix, i + 1, col_heads[i]);
 }
 
-static void print_stats(FILE* file, struct stats* s, double p)
+static void print_stats(FILE* file, struct stats* s, double p, size_t ecount)
 {
 	fprintf(file, "%f %zu %zu %zu %zu %zu %zu %zu %zu %zu %zu %zu\n",
 		p, s->nwords, s->alg2, s->alg3,
 		s->viable, s->max, s->rdec, s->rdec_max,
-		s->cdec, s->dwrong, s->rfail, s->cfail);
+		s->cdec, ecount, s->rfail, s->cfail);
 	fflush(file);
 }
 
 /* Test up to error correction capacity */
-static int test_normal(struct thread_args* args)
+static int test_normal(struct thread_args* args, _Atomic size_t* ecount)
 {
 	int (*decode)(struct pc*, uint16_t*, struct stats*) = args->alg.std;
 	size_t min_errs = args->min_errs;
@@ -142,7 +143,7 @@ static int test_normal(struct thread_args* args)
 	memset(s, 0, sizeof(*s));
 
 	size_t j;
-	for (j = 0; j < trials || s->dwrong < min_errs; j++) {
+	for (j = 0; j < trials || *ecount < min_errs; j++) {
 		int errs = get_rcw_channel(pc, c, r, args->p, args->rng);
 		int derrs = decode(pc, r, s);
 
@@ -150,7 +151,7 @@ static int test_normal(struct thread_args* args)
 			s->rfail++;
 
 		if (memcmp(r, c, len * sizeof(*r))) {
-			s->dwrong++;
+			(*ecount)++;
 			if (errs <= t)
 				s->cfail++;
 		}
@@ -171,7 +172,7 @@ static int decodes_correct_list(const uint16_t* c, size_t len,
 	return 0;
 }
 
-static int test_list(struct thread_args* args)
+static int test_list(struct thread_args* args, _Atomic size_t* ecount)
 {
 	size_t min_errs = args->min_errs;
 	size_t trials = args->trials;
@@ -187,12 +188,12 @@ static int test_list(struct thread_args* args)
 	memset(s, 0, sizeof(*s));
 
 	size_t j;
-	for (j = 0; j < trials || s->dwrong < min_errs; j++) {
+	for (j = 0; j < trials || *ecount < min_errs; j++) {
 		int errs = get_rcw_channel(pc, c, r, args->p, args->rng);
 		int list_len = args->alg.list(pc, r, list, s);
 
 		if (!decodes_correct_list(c, len, list, list_len)) {
-			s->dwrong++;
+			(*ecount)++;
 			if (errs <= t)
 				s->cfail++;
 		}
@@ -243,32 +244,32 @@ err:
 	return -1;
 }
 
-static void consolidate_stats(struct thread_args* args, int nthreads)
+static void consolidate_stats(struct thread_args* args, int nthreads, size_t ecount)
 {
 	for (int i = 1; i < nthreads; i++)
-		stats_add(&args[0].s, & args[i].s);
+		stats_add(&args[0].s, &args[i].s);
 
-	print_stats(stdout, &args[0].s, args[0].p);
+	print_stats(stdout, &args[0].s, args[0].p, ecount);
 }
 
 static int test_mt(struct thread_args* args, size_t nthreads, double p,
 		size_t trials, size_t min_errs, double fer_cutoff)
 {
+	_Atomic size_t ecount = 0;
+
 	#pragma omp parallel for
 	for (size_t i = 0; i < nthreads; i++) {
 		args[i].p = p;
 		args[i].trials = trials;
 		args[i].min_errs = min_errs;
 		if (args[i].list)
-			test_list(args + i);
+			test_list(args + i, &ecount);
 		else
-			test_normal(args + i);
+			test_normal(args + i, &ecount);
 	}
 
-	consolidate_stats(args, nthreads);
-
-	struct stats* s = &args[0].s;
-	if (((double) s->dwrong) / s->nwords < fer_cutoff)
+	consolidate_stats(args, nthreads, ecount);
+	if (((double) ecount) / args[0].s.nwords < fer_cutoff)
 		return -1;
 
 	return 0;
@@ -283,14 +284,13 @@ int run_simulation(struct options* opt)
 		return -1;
 
 	size_t trials = opt->cword_num / opt->nthreads;
-	size_t min_errs = opt->min_errs / opt->nthreads;
 	print_start(stdout, args[0].pc, "# ", opt->seed,
 			opt->nthreads, opt->alg_name);
 
 	omp_set_num_threads(opt->nthreads);
 	for (double p = opt->p_start; p >= opt->p_stop - 10E-10; p -= opt->p_step) {
 		if (test_mt(args, opt->nthreads, p, trials,
-				min_errs, opt->fer_cutoff))
+				opt->min_errs, opt->fer_cutoff))
 		    break;
 
 		if (opt->p_halve_at - p >= -10E-10) {
