@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <time.h>
-#include <pthread.h>
+#include <omp.h>
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
@@ -23,9 +23,6 @@ struct thread_args {
 	gsl_rng* rng;
 	int (*decode)(struct pc*, uint16_t*, struct stats*);
 	struct stats s;
-	int trials;
-	int errs;
-	int retval;
 };
 
 static struct wspace *alloc_ws(int len)
@@ -114,10 +111,8 @@ static void print_matrix(uint16_t* data, size_t rows, size_t cols, int nn)
 */
 
 /* Test up to error correction capacity */
-static int test_uc(struct thread_args* args)
+static int test_uc(struct thread_args* args, int trials, int errs)
 {
-	int trials = args->trials;
-	int errs = args->errs;
 	struct stats* s = &args->s;
 	struct pc* pc = args->pc;
 	struct wspace* ws = args->ws;
@@ -149,18 +144,6 @@ static int test_uc(struct thread_args* args)
 
 	s->nwords = trials;
 	return s->dwrong;
-}
-
-static void* test_uc_thread(void* arg)
-{
-	struct thread_args* args = arg;
-	int retval = test_uc(args);
-	/*
-	if (retval)
-		printf("  FAIL: %d decoding failures!\n", retval);
-	*/
-	args->retval = retval;
-	return NULL;
 }
 
 static void free_stuff(struct thread_args* args, int nthreads)
@@ -202,38 +185,22 @@ err:
 	return -1;
 }
 
-static void set_args(struct thread_args* args, int nthreads, int errs, int trials)
-{
-	for (int i = 0; i < nthreads; i++) {
-		args[i].errs = errs;
-		args[i].trials = trials;
-	}
-}
-
-static void consolidate_stats(struct thread_args* args, int nthreads)
+static void consolidate_stats(struct thread_args* args, int nthreads, int errs)
 {
 	for (int i = 1; i < nthreads; i++)
-		stats_add(&args[0].s, & args[i].s);
+		stats_add(&args[0].s, &args[i].s);
 
-	print_stats(stdout, &args[0].s, args[0].errs);
+	print_stats(stdout, &args[0].s, errs);
 }
 
 static void test_mt(struct thread_args* args, int nthreads, int errs, int trials)
 {
-	pthread_t thr[nthreads-1];
-
-	set_args(args, nthreads, errs, trials);
-	for (int i = 0; i < nthreads-1; i++) {
-		int rc = pthread_create(thr + i, NULL, test_uc_thread, &args[i]);
-		if (rc)
-			fprintf(stderr, "error: pthread_create, rc: %d\n", rc);
+	#pragma omp parallel for
+	for (int i = 0; i < nthreads; i++) {
+		test_uc(args + i, trials, errs);
 	}
 
-	test_uc_thread(&args[nthreads-1]);
-	for (int i = 0; i < nthreads-1; i++)
-		pthread_join(thr[i], NULL);
-
-	consolidate_stats(args, nthreads);
+	consolidate_stats(args, nthreads, errs);
 }
 
 int run_complexity(struct options* opt)
@@ -249,6 +216,7 @@ int run_complexity(struct options* opt)
 	print_start(stdout, args[0].pc, "# ", opt->seed,
 		    opt->nthreads, opt->alg_name);
 
+	omp_set_num_threads(opt->nthreads);
 	for (int errs = 0; errs <= t; errs++)
 		test_mt(args, opt->nthreads, errs, trials);
 

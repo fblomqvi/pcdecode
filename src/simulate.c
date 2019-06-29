@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <time.h>
-#include <pthread.h>
+#include <omp.h>
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
@@ -27,7 +27,6 @@ struct thread_args {
 	size_t min_errs;
 	double p;
 	int list;
-	int retval;
 };
 
 static struct wspace *alloc_ws(int len, int nstrat)
@@ -186,17 +185,6 @@ static int test_list(struct thread_args* args)
 	return s->cfail;
 }
 
-static void* test_uc_thread(void* arg)
-{
-	struct thread_args* args = arg;
-	if (args->list)
-		args->retval = test_list(args);
-	else
-		args->retval = test_normal(args);
-
-	return NULL;
-}
-
 static void free_stuff(struct thread_args* args, int nthreads)
 {
 	for (int i = 0; i < nthreads; i++) {
@@ -238,16 +226,6 @@ err:
 	return -1;
 }
 
-static void set_args(struct thread_args* args, size_t nthreads,
-			double p, size_t trials, size_t min_errs)
-{
-	for (size_t i = 0; i < nthreads; i++) {
-		args[i].p = p;
-		args[i].trials = trials;
-		args[i].min_errs = min_errs;
-	}
-}
-
 static void consolidate_stats(struct thread_args* args, int nthreads)
 {
 	for (int i = 1; i < nthreads; i++)
@@ -259,18 +237,16 @@ static void consolidate_stats(struct thread_args* args, int nthreads)
 static int test_mt(struct thread_args* args, size_t nthreads, double p,
 		size_t trials, size_t min_errs, double fer_cutoff)
 {
-	pthread_t thr[nthreads-1];
-
-	set_args(args, nthreads, p, trials, min_errs);
-	for (size_t i = 0; i < nthreads-1; i++) {
-		int rc = pthread_create(thr + i, NULL, test_uc_thread, &args[i]);
-		if (rc)
-			fprintf(stderr, "error: pthread_create, rc: %d\n", rc);
+	#pragma omp parallel for
+	for (size_t i = 0; i < nthreads; i++) {
+		args[i].p = p;
+		args[i].trials = trials;
+		args[i].min_errs = min_errs;
+		if (args[i].list)
+			test_list(args + i);
+		else
+			test_normal(args + i);
 	}
-
-	test_uc_thread(&args[nthreads-1]);
-	for (size_t i = 0; i < nthreads-1; i++)
-		pthread_join(thr[i], NULL);
 
 	consolidate_stats(args, nthreads);
 
@@ -294,6 +270,7 @@ int run_simulation(struct options* opt)
 	print_start(stdout, args[0].pc, "# ", opt->seed,
 			opt->nthreads, opt->alg_name);
 
+	omp_set_num_threads(opt->nthreads);
 	for (double p = opt->p_start; p >= opt->p_stop - 10E-10; p -= opt->p_step) {
 		if (test_mt(args, opt->nthreads, p, trials,
 				min_errs, opt->fer_cutoff))

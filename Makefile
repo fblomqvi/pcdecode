@@ -1,8 +1,8 @@
 CC=gcc
-CFLAGS=-std=gnu11 -Wall -Wextra -pedantic -g -O2 -Isrc -DNDEBUG $(OPTFLAGS)
+CFLAGS=-std=gnu11 -Wall -Wextra -pedantic -g -O2 -Isrc -DNDEBUG -fopenmp $(OPTFLAGS)
 #CFLAGS=-std=gnu11 -Wall -Wextra -g -O3 -ffast-math -mtune=native -Isrc -DNDEBUG $(OPTFLAGS)
 #CFLAGS= -std=gnu99 -Wall -Wextra -pedantic -g -O2 -Isrc -DNDEBUG -fomit-frame-pointer -mtune=native
-LIBS= -lm -lrs -lgsl -lgslcblas -pthread $(OPTLIBS)
+LIBS= -lm -lrs -lgsl -lgslcblas $(OPTLIBS)
 PREFIX?=/usr/local
 SRCDIR=src
 OBJDIR=obj
