@@ -1,5 +1,5 @@
 /* version.c
-   Copyright (C) 2017 Ferdinand Blomqvist
+   Copyright (C) 2019 Ferdinand Blomqvist
 
    This program is free software: you can redistribute it and/or modify it
    under the terms of the GNU General Public License version 2 as published by
@@ -26,7 +26,7 @@ int print_version(FILE* file)
 {
     static const char* formatstr =
         "%s (%s) version %u.%u.%u (released %u-%.2u-%.2u, compiled %s %s)\n"
-        "Copyright (C) 2017 Ferdinand Blomqvist\n"
+        "Copyright (C) 2019 Ferdinand Blomqvist\n"
         "License GPLv2: GNU GPL version 2 <http://gnu.org/licenses/gpl.html>.\n"
         "This is free software: you are free to change and redistribute it.\n"
         "There is NO WARRANTY, to the extent permitted by law.\n\n"
