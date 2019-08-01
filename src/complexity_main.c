@@ -18,7 +18,7 @@
 #include "dbg.h"
 #include "version.h"
 #include "rng.h"
-#include "simulate_complexity.h"
+#include "complexity.h"
 #include <getopt.h>
 #include <errno.h>
 #include <string.h>

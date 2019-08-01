@@ -1,4 +1,4 @@
-/* simulate_complexity.h
+/* complexity.h
    Copyright (C) 2019 Ferdinand Blomqvist
 
    This program is free software: you can redistribute it and/or modify it
@@ -15,8 +15,8 @@
 
    Written by Ferdinand Blomqvist. */
 
-#ifndef FB_PCDECODE_SIMULATE_COMPLEXITY_H
-#define FB_PCDECODE_SIMULATE_COMPLEXITY_H
+#ifndef FB_PCDECODE_COMPLEXITY_H
+#define FB_PCDECODE_COMPLEXITY_H
 
 #include "product_code.h"
 #include "rng.h"
@@ -44,5 +44,5 @@ struct options {
 
 int run_complexity(struct options* opt);
 
-#endif /* FB_PCDECODE_SIMULATE_COMPLEXITY_H */
+#endif /* FB_PCDECODE_COMPLEXITY_H */
 

@@ -1,4 +1,4 @@
-/* simulate_complexity.c
+/* complexity.c
    Copyright (C) 2019 Ferdinand Blomqvist
 
    This program is free software: you can redistribute it and/or modify it
@@ -15,7 +15,7 @@
 
    Written by Ferdinand Blomqvist. */
 
-#include "simulate_complexity.h"
+#include "complexity.h"
 #include "gen_errors.h"
 #include "rng.h"
 #include <string.h>
