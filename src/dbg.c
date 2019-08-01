@@ -17,7 +17,6 @@
 
 #include "dbg.h"
 #include <stdarg.h>
-#include "lt_errno.h"
 
 void fprintf_we(FILE* file, const char* format, ...)
 {
@@ -26,13 +25,4 @@ void fprintf_we(FILE* file, const char* format, ...)
     vfprintf(file, format, args);
     va_end(args);
     fprintf(file, "; %s\n", errno ? strerror(errno) : "None");
-}
-
-void fprintf_we_lt(FILE* file, const int lt_errno, const char* format, ...)
-{
-    va_list args;
-    va_start(args, format);
-    vfprintf(file, format, args);
-    va_end(args);
-    fprintf(file, "; %s\n", lt_errno ? lt_strerror(lt_errno) : "None");
 }
