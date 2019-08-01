@@ -31,10 +31,8 @@
 
 static int print_help(FILE* file)
 {
-    static const char* formatstr =
-"Usage: %s [OPTION]...\n\n%s\n";
-
-    static const char* helpstr =
+	static const char* formatstr = "Usage: %s [OPTION]...\n\n%s\n";
+	static const char* helpstr =
 "Run complexity simulations for product codes with different algorithms.\n"
 "The component codes are Reed-Solomon codes over fields of size 2^m.\n"
 "Outputs to stdout.\n\n"
@@ -116,7 +114,8 @@ static void parse_cmdline(int argc, char* const argv[], struct options* opt)
 			else if (!strcmp(optarg, "erasgd"))
 				opt->alg = pc_decode_eras_gd;
 			else
-				check(0, "invalid argument to option '%c': '%s'", ch, optarg);
+				check(0, "invalid argument to option "
+					"'%c': '%s'", ch, optarg);
 			opt->alg_name = optarg;
 			break;
 		}

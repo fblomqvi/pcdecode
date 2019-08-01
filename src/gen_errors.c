@@ -19,8 +19,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-static void gen_random_cword(struct pc *pc, uint16_t* c,
-			const gsl_rng* rng)
+static void gen_random_cword(struct pc* pc, uint16_t* c,
+				const gsl_rng* rng)
 {
 	int nn = pc->row_code->code->nn;
 	int rdlen = pc->cols - pc->row_code->code->nroots;
@@ -42,7 +42,7 @@ static void gen_random_cword(struct pc *pc, uint16_t* c,
  * 0 if there is no error in this position;
  * 1 if there is a symbol error in this position;
  */
-void get_rcw_we(struct pc *pc, uint16_t* c, uint16_t* r,
+void get_rcw_we(struct pc* pc, uint16_t* c, uint16_t* r,
 		int errs, int* errlocs, const gsl_rng* rng)
 {
 	int nn = pc->row_code->code->nn;
@@ -75,7 +75,7 @@ void get_rcw_we(struct pc *pc, uint16_t* c, uint16_t* r,
 
 
 /* Returns the number of errors */
-int get_rcw_channel(struct pc *pc, uint16_t* c, uint16_t* r,
+int get_rcw_channel(struct pc* pc, uint16_t* c, uint16_t* r,
 			double p, const gsl_rng* rng)
 {
 	int nn = pc->row_code->code->nn;

@@ -28,23 +28,23 @@
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
 struct wspace {
-	uint16_t *c;		/* sent codeword */
-	uint16_t *r;		/* received word */
-	uint16_t *r_cpy;
-	int *errlocs;
+	uint16_t*	c;		/* sent codeword */
+	uint16_t*	r;		/* received word */
+	uint16_t*	r_cpy;
+	int* 		errlocs;
 };
 
 struct thread_args {
-	struct pc* pc;
-	struct wspace* ws;
-	gsl_rng* rng;
 	int (*decode)(struct pc*, uint16_t*, struct stats*);
-	struct stats s;
+	struct pc*	pc;
+	struct wspace*	ws;
+	gsl_rng* 	rng;
+	struct stats 	s;
 };
 
-static struct wspace *alloc_ws(int len)
+static struct wspace* alloc_ws(int len)
 {
-	struct wspace *ws;
+	struct wspace* ws;
 
 	ws = calloc(1, sizeof(*ws));
 	if (!ws)
@@ -70,7 +70,7 @@ err:
 	return NULL;
 }
 
-static void free_ws(struct wspace *ws)
+static void free_ws(struct wspace* ws)
 {
 	if (!ws)
 		return;
@@ -133,9 +133,9 @@ static int test_uc(struct thread_args* args, int trials, int errs)
 	struct stats* s = &args->s;
 	struct pc* pc = args->pc;
 	struct wspace* ws = args->ws;
-	int *errlocs = ws->errlocs;
-	uint16_t *c = ws->c;
-	uint16_t *r = ws->r;
+	int* errlocs = ws->errlocs;
+	uint16_t* c = ws->c;
+	uint16_t* r = ws->r;
 	int len = pc_len(pc);
 
 	memset(s, 0, sizeof(*s));
