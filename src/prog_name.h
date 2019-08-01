@@ -15,11 +15,11 @@
 
    Written by Ferdinand Blomqvist. */
 
-#ifndef FB_LIBLATTICE_PROG_NAME_H
-#define FB_LIBLATTICE_PROG_NAME_H
+#ifndef FB_PCDECODE_PROG_NAME_H
+#define FB_PCDECODE_PROG_NAME_H
 
 extern char* g_prog_name;
 
 #define PROGRAM_NAME g_prog_name
 
-#endif /* FB_LIBLATTICE_PROG_NAME_H */
+#endif /* FB_PCDECODE_PROG_NAME_H */
