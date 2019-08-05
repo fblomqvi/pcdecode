@@ -62,7 +62,7 @@ struct pc* pc_init(size_t symsize, size_t gfpoly,
     if (!pc->es)
 	goto err;
 
-    size_t slen = pc->row_code->code->nroots;
+    size_t slen = pc->row_code->nroots;
     pc->es_buffer = malloc(pc->nstrat * slen * sizeof(*pc->es_buffer));
     if (!pc->es_buffer)
 	goto err;
@@ -107,7 +107,7 @@ void pc_free(struct pc* pc)
 
 void pc_encode(struct pc* pc, uint16_t* data)
 {
-    size_t row_dlen = pc->cols - pc->row_code->code->nroots;
+    size_t row_dlen = pc->cols - pc->row_code->nroots;
     for (size_t i = 0; i < row_dlen; i++)
 	rs_encode(pc->col_code, &data[i], pc->rows, pc->cols);
 
@@ -127,7 +127,7 @@ static void reset_estrat(struct pc* pc)
 
 static void add_to_estrat(struct pc* pc, size_t col, int weight)
 {
-    size_t slen = pc->row_code->code->nroots;
+    size_t slen = pc->row_code->nroots;
 
     if (weight < 0)
 	weight = pc->nstrat;
@@ -206,9 +206,9 @@ static inline double calc_weight(int e, int t, size_t d)
 
 static void decode_columns_gmd(struct pc* pc, uint16_t* data, double* weights)
 {
-    struct rs_control* rs = pc->col_code;
-    size_t d = rs->code->nroots + 1;
-    int t = rs->code->nroots / 2;
+    struct rs_code* rs = pc->col_code;
+    size_t d = rs->nroots + 1;
+    int t = rs->nroots / 2;
 
     reset_estrat(pc);
 
@@ -257,8 +257,8 @@ int pc_decode_gmd(struct pc* pc, uint16_t* data, struct stats* s)
     if (viable == 0)
 	return -1;
 
-    struct rs_control* rs = pc->row_code;
-    int errors[rs->code->nroots];
+    struct rs_code* rs = pc->row_code;
+    int errors[rs->nroots];
     int i = pc->nstrat - 1;
 
     for (size_t r = 0; r < pc->rows; r++) {
@@ -279,7 +279,7 @@ int pc_decode_gmd(struct pc* pc, uint16_t* data, struct stats* s)
 		continue;
 
 	    double dist = calc_gdm(weights, pc->cols, errors, ret);
-	    if (dist < rs->code->nroots + 1) {
+	    if (dist < rs->nroots + 1) {
 		memcpy(data + r * pc->cols, y, pc->cols * sizeof(*y));
 		fail = 0;
 		break;
@@ -313,8 +313,8 @@ int pc_decode_gd(struct pc* pc, uint16_t* data, struct stats* s)
     if (viable == 0)
 	return -1;
 
-    struct rs_control* rs = pc->row_code;
-    int errors[rs->code->nroots];
+    struct rs_code* rs = pc->row_code;
+    int errors[rs->nroots];
 
     for (size_t r = 0; r < pc->rows; r++) {
 	int fail = 1;
@@ -335,7 +335,7 @@ int pc_decode_gd(struct pc* pc, uint16_t* data, struct stats* s)
 		continue;
 
 	    double dist = calc_gdm(weights, pc->cols, errors, ret);
-	    if (dist < rs->code->nroots + 1) {
+	    if (dist < rs->nroots + 1) {
 		memcpy(data + r * pc->cols, y, pc->cols * sizeof(*y));
 		fail = 0;
 		break;
@@ -355,8 +355,8 @@ int pc_decode_gd(struct pc* pc, uint16_t* data, struct stats* s)
 // TODO: detect failure and success
 int pc_decode_iter(struct pc* pc, uint16_t* data, struct stats* s)
 {
-    struct rs_control* rs_c = pc->col_code;
-    struct rs_control* rs_r = pc->row_code;
+    struct rs_code* rs_c = pc->col_code;
+    struct rs_code* rs_r = pc->row_code;
     size_t len = pc_len(pc);
     uint16_t* prev = pc->x_buf;
     uint16_t* y = pc->y_buf;
@@ -397,8 +397,8 @@ int pc_decode_eras(struct pc* pc, uint16_t* data, struct stats* s)
 
     s->alg2++;
 
-    struct rs_control* rs_c = pc->col_code;
-    struct rs_control* rs_r = pc->row_code;
+    struct rs_code* rs_c = pc->col_code;
+    struct rs_code* rs_r = pc->row_code;
     size_t len = pc_len(pc);
     uint16_t* prev = pc->x_buf;
     uint16_t* y = pc->y_buf;
@@ -508,13 +508,13 @@ int pc_decode_eras_gd(struct pc* pc, uint16_t* data, struct stats* s)
 void pc_print(FILE* file, const struct pc* pc, const char* prefix)
 {
 
-    size_t nn = pc->row_code->code->nn;
+    size_t nn = pc->row_code->nn;
     fprintf(file, "%s(%zu, %zu, %zu)_%zu code...\n", prefix,
 	    pc_len(pc), pc_dim(pc), pc_mind(pc), nn + 1);
     fprintf(file, "%s  Row code: (%zu, %zu, %d)\n", prefix,
-	    pc->cols, pc->cols - pc->row_code->code->nroots,
+	    pc->cols, pc->cols - pc->row_code->nroots,
 	    rs_mind(pc->row_code));
     fprintf(file, "%s  Col code: (%zu, %zu, %d)\n", prefix,
-	    pc->rows, pc->rows - pc->col_code->code->nroots,
+	    pc->rows, pc->rows - pc->col_code->nroots,
 	    rs_mind(pc->col_code));
 }

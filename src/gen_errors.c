@@ -22,9 +22,9 @@
 static void gen_random_cword(struct pc* pc, uint16_t* c,
 				const gsl_rng* rng)
 {
-	int nn = pc->row_code->code->nn;
-	int rdlen = pc->cols - pc->row_code->code->nroots;
-	int cdlen = pc->rows - pc->col_code->code->nroots;
+	int nn = pc->row_code->nn;
+	int rdlen = pc->cols - pc->row_code->nroots;
+	int cdlen = pc->rows - pc->col_code->nroots;
 
 	/* Load c with random data and encode */
 	for (int j = 0; j < cdlen; j++)
@@ -45,7 +45,7 @@ static void gen_random_cword(struct pc* pc, uint16_t* c,
 void get_rcw_we(struct pc* pc, uint16_t* c, uint16_t* r,
 		int errs, int* errlocs, const gsl_rng* rng)
 {
-	int nn = pc->row_code->code->nn;
+	int nn = pc->row_code->nn;
 	int len = pc_len(pc);
 
 	gen_random_cword(pc, c, rng);
@@ -78,7 +78,7 @@ void get_rcw_we(struct pc* pc, uint16_t* c, uint16_t* r,
 int get_rcw_channel(struct pc* pc, uint16_t* c, uint16_t* r,
 			double p, const gsl_rng* rng)
 {
-	int nn = pc->row_code->code->nn;
+	int nn = pc->row_code->nn;
 	int len = pc_len(pc);
 	int errs = 0;
 

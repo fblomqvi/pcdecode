@@ -26,8 +26,8 @@
 struct estrat;
 
 struct pc {
-    struct rs_control* row_code;
-    struct rs_control* col_code;
+    struct rs_code* row_code;
+    struct rs_code* col_code;
     size_t rows;
     size_t cols;
     size_t nstrat;
@@ -100,7 +100,7 @@ static inline size_t pc_len(const struct pc* pc)
 { return pc->rows * pc->cols; }
 
 static inline size_t pc_dim(const struct pc* pc)
-{ return (pc->cols - pc->row_code->code->nroots) * (pc->rows - pc->col_code->code->nroots); }
+{ return (pc->cols - pc->row_code->nroots) * (pc->rows - pc->col_code->nroots); }
 
 static inline size_t pc_mind(const struct pc* pc)
 { return rs_mind(pc->row_code) * rs_mind(pc->col_code); }
