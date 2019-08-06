@@ -31,23 +31,20 @@
 struct wspace {
 	uint16_t *c;		/* sent codeword */
 	uint16_t *r;		/* received word */
-	uint16_t* list_buff;
-	uint16_t** list;
 };
 
 struct thread_args {
+	int (*decode)(struct pc*, uint16_t*, struct stats*);
 	struct pc* pc;
 	struct wspace* ws;
 	gsl_rng* rng;
-	union decoder alg;
 	struct stats s;
 	size_t trials;
 	size_t min_errs;
 	double p;
-	int list;
 };
 
-static struct wspace *alloc_ws(int len, int nstrat)
+static struct wspace *alloc_ws(int len)
 {
 	struct wspace *ws;
 
@@ -55,23 +52,11 @@ static struct wspace *alloc_ws(int len, int nstrat)
 	if (!ws)
 		return NULL;
 
-	size_t buf_size = nstrat ? nstrat + 3 : 2;
-	ws->c = malloc(buf_size * len * sizeof(*ws->c));
+	ws->c = malloc(2 * len * sizeof(*ws->c));
 	if (!ws->c)
 		goto err;
 
 	ws->r = ws->c + len;
-
-	if (nstrat) {
-		ws->list_buff = ws->r + len;
-		ws->list = malloc((nstrat + 1) * sizeof(*ws->list));
-		if (!ws->list)
-			goto err;
-
-		for (int i = 0; i <= nstrat; i++)
-			ws->list[i] = ws->list_buff + (i * len);
-	}
-
 	return ws;
 
 err:
@@ -85,7 +70,6 @@ static void free_ws(struct wspace *ws)
 	if (!ws)
 		return;
 
-	free(ws->list);
 	free(ws->c);
 	free(ws);
 }
@@ -129,7 +113,6 @@ static void print_stats(FILE* file, struct stats* s, double p, size_t ecount)
 /* Test up to error correction capacity */
 static int test_normal(struct thread_args* args, _Atomic size_t* ecount)
 {
-	int (*decode)(struct pc*, uint16_t*, struct stats*) = args->alg.std;
 	size_t min_errs = args->min_errs;
 	size_t trials = args->trials;
 	struct stats* s = &args->s;
@@ -145,54 +128,12 @@ static int test_normal(struct thread_args* args, _Atomic size_t* ecount)
 	size_t j;
 	for (j = 0; j < trials || *ecount < min_errs; j++) {
 		int errs = get_rcw_channel(pc, c, r, args->p, args->rng);
-		int derrs = decode(pc, r, s);
+		int derrs = args->decode(pc, r, s);
 
 		if (derrs < 0)
 			s->rfail++;
 
 		if (memcmp(r, c, len * sizeof(*r))) {
-			(*ecount)++;
-			if (errs <= t)
-				s->cfail++;
-		}
-	}
-
-	s->nwords = j;
-	return s->cfail;
-}
-
-static int decodes_correct_list(const uint16_t* c, size_t len,
-				uint16_t* const* list, size_t list_len)
-{
-	for (size_t i = 0; i < list_len; i++) {
-		if (!memcmp(c, list[i], len * sizeof(*c)))
-			return 1;
-	}
-
-	return 0;
-}
-
-static int test_list(struct thread_args* args, _Atomic size_t* ecount)
-{
-	size_t min_errs = args->min_errs;
-	size_t trials = args->trials;
-	struct stats* s = &args->s;
-	struct pc* pc = args->pc;
-	struct wspace* ws = args->ws;
-	uint16_t *c = ws->c;
-	uint16_t *r = ws->r;
-	uint16_t **list = ws->list;
-	int len = pc_len(pc);
-	int t = (pc_mind(pc) - 1) / 2;
-
-	memset(s, 0, sizeof(*s));
-
-	size_t j;
-	for (j = 0; j < trials || *ecount < min_errs; j++) {
-		int errs = get_rcw_channel(pc, c, r, args->p, args->rng);
-		int list_len = args->alg.list(pc, r, list, s);
-
-		if (!decodes_correct_list(c, len, list, list_len)) {
 			(*ecount)++;
 			if (errs <= t)
 				s->cfail++;
@@ -225,7 +166,7 @@ static int alloc_stuff(struct thread_args* args, struct options* opt)
 			goto err;
 
 		int len = pc_len(args[i].pc);
-		args[i].ws = alloc_ws(len * len, opt->list ? args[i].pc->nstrat : 0);
+		args[i].ws = alloc_ws(len * len);
 		if (!args[i].ws)
 			goto err;
 
@@ -233,8 +174,7 @@ static int alloc_stuff(struct thread_args* args, struct options* opt)
 		if (!args[i].rng)
 			goto err;
 
-		args[i].alg = opt->alg;
-		args[i].list = opt->list;
+		args[i].decode = opt->alg;
 	}
 
 	return 0;
@@ -262,10 +202,7 @@ static int test_mt(struct thread_args* args, size_t nthreads, double p,
 		args[i].p = p;
 		args[i].trials = trials;
 		args[i].min_errs = min_errs;
-		if (args[i].list)
-			test_list(args + i, &ecount);
-		else
-			test_normal(args + i, &ecount);
+		test_normal(args + i, &ecount);
 	}
 
 	consolidate_stats(args, nthreads, ecount);

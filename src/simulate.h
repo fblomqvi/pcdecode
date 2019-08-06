@@ -21,16 +21,10 @@
 #include "product_code.h"
 #include "rng.h"
 
-union decoder {
-	int (*std)(struct pc*, uint16_t*, struct stats*);
-	int (*list)(struct pc*, const uint16_t*, uint16_t**, struct stats*);
-};
-
 struct options {
 	const gsl_rng_type* rng_type;
-	union decoder alg;
+	int (*alg)(struct pc*, uint16_t*, struct stats*);
 	const char* alg_name;
-	int list;
 	size_t cword_num;
 	size_t min_errs;
 	size_t nthreads;
