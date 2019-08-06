@@ -48,6 +48,8 @@ static int print_help(FILE* file)
 "      --r-nroots=NUM           The number of roots in the row code. The\n"
 "                                 minimum distance of the row code is\n"
 "                                 NUM + 1.\n"
+"  -g, --gfpoly=POLY            The Galois Field polynomial to use. If POLY is zero,\n"
+"                                 then the default polynomial is used.\n"
 "  -n, --num-words=NUM          The minimum number of words to decode.\n"
 "  -R, --rng=RNG                The random number generator to use. To see a list of all\n"
 "                                 available generators give 'list' as argument.\n"
@@ -63,9 +65,10 @@ static int print_help(FILE* file)
 
 static void parse_cmdline(int argc, char* const argv[], struct options* opt)
 {
-	static const char* optstring = "a:n:c:r:R:S:s:T:";
+	static const char* optstring = "a:g:n:c:r:R:S:s:T:";
 	static struct option longopt[] = {
 		{"algorithm", required_argument, NULL, 'a'},
+		{"gfpoly", required_argument, NULL, 'g'},
 		{"num-words", required_argument, NULL, 'n'},
 		{"threads", required_argument, NULL, 'T'},
 		{"cols", required_argument, NULL, 'c'},
@@ -115,6 +118,12 @@ static void parse_cmdline(int argc, char* const argv[], struct options* opt)
 			opt->cols = strtoul(optarg, &endptr, 10);
 			check(*endptr == '\0'
 				&& !(errno == ERANGE && opt->cols == ULONG_MAX),
+				"invalid argument to option '%c': '%s'", ch, optarg);
+			break;
+		case 'g':
+			opt->gfpoly = strtoul(optarg, &endptr, 0);
+			check(*endptr == '\0'
+				&& !(errno == ERANGE && opt->gfpoly == ULONG_MAX),
 				"invalid argument to option '%c': '%s'", ch, optarg);
 			break;
 		case 'n':

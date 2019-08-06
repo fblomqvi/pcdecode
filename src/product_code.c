@@ -500,4 +500,5 @@ void pc_print(FILE* file, const struct pc* pc, const char* prefix)
     fprintf(file, "%s  Col code: (%zu, %zu, %d)\n", prefix,
 	    pc->rows, pc->rows - pc->col_code->nroots,
 	    rs_mind(pc->col_code));
+    fprintf(file, "%s  gfpoly: 0x%.2x\n", prefix, pc->row_code->gfpoly);
 }
