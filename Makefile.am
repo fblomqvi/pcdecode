@@ -7,7 +7,7 @@ bin_PROGRAMS = complexity simulate
 COMMON_SOURCES = src/dbg.c src/dbg.h src/gen_errors.c src/gen_errors.h \
 		 src/product_code.c src/product_code.h src/prog_name.c \
 		 src/prog_name.h src/rng.c src/rng.h src/version.c \
-		 src/version.h
+		 src/version.h src/algorithm.c src/algorithm.h
 
 complexity_SOURCES = src/complexity_main.c src/complexity.c \
 		     src/complexity.h $(COMMON_SOURCES)

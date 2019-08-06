@@ -1,4 +1,4 @@
-/* simulate.h
+/* algorithm.h
    Copyright (C) 2019 Ferdinand Blomqvist
 
    This program is free software: you can redistribute it and/or modify it
@@ -15,37 +15,23 @@
 
    Written by Ferdinand Blomqvist. */
 
-#ifndef FB_PCDECODE_SIMULATE_H
-#define FB_PCDECODE_SIMULATE_H
+#ifndef FB_PCDECODE_ALGORITHM_H
+#define FB_PCDECODE_ALGORITHM_H
 
 #include "product_code.h"
-#include "rng.h"
 
-struct options {
-	const gsl_rng_type* rng_type;
-	int (*alg)(struct pc*, uint16_t*, struct stats*);
-	size_t cword_num;
-	size_t min_errs;
-	size_t nthreads;
-	unsigned long seed;
-	double fer_cutoff;
-	double p_start;
-	double p_stop;
-	double p_step;
-	double p_halve_at;
-	size_t rows;
-	size_t cols;
-	size_t symsize;
-	size_t gfpoly;
-	size_t r_fcr;
-	size_t r_prim;
-	size_t r_nroots;
-	size_t c_fcr;
-	size_t c_prim;
-	size_t c_nroots;
-};
+typedef int (*alg_ptr)(struct pc*, uint16_t*, struct stats*);
 
+/*
+ * Returns a pointer to the decoding function of the specified algorithm.
+ * Returns NULL if the algorithm name is invalid.
+ */
+alg_ptr algorithm_by_name(const char* name);
 
-int run_simulation(struct options* opt);
+/* Returns the name associated with the given decoding algorithm. */
+const char* algorithm_get_name(alg_ptr alg);
 
-#endif /* FB_PCDECODE_SIMULATE_H */
+/* Prints the names of all the available algorithms; one on each line */
+int algorithm_print_names(FILE* file);
+
+#endif /* FB_PCDECODE_ALGORITHM_H */

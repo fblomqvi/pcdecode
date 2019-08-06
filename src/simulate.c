@@ -17,6 +17,7 @@
 
 #include "simulate.h"
 #include "gen_errors.h"
+#include "algorithm.h"
 #include "rng.h"
 #include <string.h>
 #include <stdlib.h>
@@ -222,7 +223,7 @@ int run_simulation(struct options* opt)
 
 	size_t trials = opt->cword_num / opt->nthreads;
 	print_start(stdout, args[0].pc, "# ", opt->seed,
-			opt->nthreads, opt->alg_name);
+		    opt->nthreads, algorithm_get_name(opt->alg));
 
 	omp_set_num_threads(opt->nthreads);
 	for (double p = opt->p_start; p >= opt->p_stop - 10E-10; p -= opt->p_step) {

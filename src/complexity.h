@@ -24,7 +24,6 @@
 struct options {
 	const gsl_rng_type* rng_type;
 	int (*alg)(struct pc*, uint16_t*, struct stats*);
-	const char* alg_name;
 	size_t cword_num;
 	size_t nthreads;
 	unsigned long seed;

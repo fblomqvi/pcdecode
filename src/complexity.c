@@ -17,6 +17,7 @@
 
 #include "complexity.h"
 #include "gen_errors.h"
+#include "algorithm.h"
 #include "rng.h"
 #include <string.h>
 #include <stdlib.h>
@@ -231,7 +232,7 @@ int run_complexity(struct options* opt)
 	int t = (pc_mind(args[0].pc) - 1) / 2;
 	int trials = opt->cword_num / opt->nthreads;
 	print_start(stdout, args[0].pc, "# ", opt->seed,
-		    opt->nthreads, opt->alg_name);
+		    opt->nthreads, algorithm_get_name(opt->alg));
 
 	omp_set_num_threads(opt->nthreads);
 	for (int errs = 0; errs <= t; errs++)

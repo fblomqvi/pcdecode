@@ -19,6 +19,7 @@
 #include "version.h"
 #include "rng.h"
 #include "simulate.h"
+#include "algorithm.h"
 #include <getopt.h>
 #include <errno.h>
 #include <string.h>
@@ -40,8 +41,8 @@ static int print_help(FILE* file)
 "codes over fields of size 2^m and the channel is a q-ary symmetric\n"
 "channel. Outputs to stdout\n\n"
 "Mandatory arguments to long options are mandatory for short options too.\n"
-"  -a, --algorithm=ALG		The decoding algorithm to use. Valid values\n"
-"                                 are gmd, gd, iter, itergd, eras, erasgd.\n"
+"  -a, --algorithm=ALG		The decoding algorithm to use. To see a list of all\n"
+"                                 available algorithms give 'list' as argument.\n"
 "  -c, --cols=NUM               The number of columns in the codeword.\n"
 "  -r, --rows=NUM               The number of rows in the codeword.\n"
 "      --c-nroots=NUM           The number of roots in the oulumn code.\n"
@@ -122,23 +123,13 @@ static void parse_cmdline(int argc, char* const argv[], struct options* opt)
 		{
 		case 'a':
 		{
-			if (!strcmp(optarg, "gmd")) {
-				opt->alg= pc_decode_gmd;
-			} else if (!strcmp(optarg, "gd")) {
-				opt->alg= pc_decode_gd;
-			} else if (!strcmp(optarg, "iter")) {
-				opt->alg= pc_decode_iter;
-			} else if (!strcmp(optarg, "itergd")) {
-				opt->alg= pc_decode_iter_gd;
-			} else if (!strcmp(optarg, "eras")) {
-				opt->alg= pc_decode_eras;
-			} else if (!strcmp(optarg, "erasgd")) {
-				opt->alg= pc_decode_eras_gd;
+			if(!strcmp(optarg, "list")) {
+				exit(algorithm_print_names(stdout));
 			} else {
-				check(0, "invalid argument to option '%c': '%s'", ch, optarg);
+				opt->alg = algorithm_by_name(optarg);
+				check(opt->alg, "invalid argument to option "
+						"'%c': '%s'", ch, optarg);
 			}
-
-			opt->alg_name = optarg;
 			break;
 		}
 		case 'c':
