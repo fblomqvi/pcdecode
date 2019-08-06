@@ -31,7 +31,6 @@
 struct wspace {
 	uint16_t*	c;		/* sent codeword */
 	uint16_t*	r;		/* received word */
-	uint16_t*	r_cpy;
 	int* 		errlocs;
 };
 
@@ -51,12 +50,11 @@ static struct wspace* alloc_ws(int len)
 	if (!ws)
 		return NULL;
 
-	ws->c = malloc(3 * len * sizeof(*ws->c));
+	ws->c = malloc(2 * len * sizeof(*ws->c));
 	if (!ws->c)
 		goto err;
 
 	ws->r = ws->c + len;
-	ws->r_cpy = ws->r + len;
 
 	ws->errlocs = malloc(len * sizeof(*ws->errlocs));
 	if (!ws->errlocs)
@@ -113,21 +111,6 @@ static void print_stats(FILE* file, struct stats* s, int errs)
 	fflush(file);
 }
 
-/*
-static void print_matrix(uint16_t* data, size_t rows, size_t cols, int nn)
-{
-	int width = ceil(log10(nn));
-	for (size_t r = 0; r < rows; r++) {
-		printf("(");
-		for (size_t c = 0; c < cols; c++) {
-			printf(" %*u", width, data[r * cols + c]);
-		}
-		printf(" )\n");
-	}
-	printf("\n");
-}
-*/
-
 /* Test up to error correction capacity */
 static int test_uc(struct thread_args* args, int trials, int errs)
 {
@@ -143,21 +126,13 @@ static int test_uc(struct thread_args* args, int trials, int errs)
 
 	for (int j = 0; j < trials; j++) {
 		get_rcw_we(pc, c, r, errs, errlocs, args->rng);
-		//memcpy(ws->r_cpy, r, len * sizeof(*r));
 		int derrs = args->decode(pc, r, s);
 
 		if (derrs < 0)
 			s->rfail++;
 
-		if (memcmp(r, c, len * sizeof(*r))) {
+		if (memcmp(r, c, len * sizeof(*r)))
 			s->dwrong++;
-			/*
-			printf("c:\n");
-			print_matrix(c, pc->rows, pc->cols, pc->row_code->code->nn);
-			printf("r:\n");
-			print_matrix(ws->r_cpy, pc->rows, pc->cols, pc->row_code->code->nn);
-			*/
-		}
 	}
 
 	s->nwords = trials;

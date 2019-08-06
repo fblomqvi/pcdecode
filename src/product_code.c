@@ -177,18 +177,6 @@ static void estrat_remove_unnecessary(struct pc* pc)
     } while (i > 0);
 }
 
-/*
-static void print_estrats(struct pc* pc)
-{
-    for (size_t i = 0; i < pc->nstrat; i++) {
-	printf("strat %zu: viable: %d; {", i, pc->es[i].viable);
-	for (size_t j = 0; j < pc->es[i].size; j++)
-	    printf(" %d", pc->es[i].strat[j]);
-	printf(" }\n");
-    }
-}
-*/
-
 static size_t estrat_count_viable(struct pc* pc)
 {
     size_t w = 0;
@@ -352,7 +340,6 @@ int pc_decode_gd(struct pc* pc, uint16_t* data, struct stats* s)
     return 0;
 }
 
-// TODO: detect failure and success
 int pc_decode_iter(struct pc* pc, uint16_t* data, struct stats* s)
 {
     struct rs_code* rs_c = pc->col_code;
@@ -412,20 +399,16 @@ int pc_decode_eras(struct pc* pc, uint16_t* data, struct stats* s)
     // Decode columns
     for (size_t i = 0; i < pc->cols; i++) {
 	col_eras[i] = rs_decode(rs_c, &y[i], pc->rows, pc->cols, NULL, 0, NULL);
-	//printf("col_eras[%zu]: %d\n", i, col_eras[i]);
 	if (col_eras[i])
 	    col_eras_count++;
     }
-    //printf("col_eras_count: %d\n", col_eras_count);
 
     // Decode rows
     for (size_t i = 0; i < pc->rows; i++) {
 	row_eras[i] = rs_decode(rs_r, &y[i * pc->cols], pc->cols, 1, NULL, 0, NULL);
-	//printf("row_eras[%zu]: %d\n", i, row_eras[i]);
 	if (row_eras[i])
 	    row_eras_idx[row_eras_count++] = i;
     }
-    //printf("row_eras_count: %d\n", row_eras_count);
 
     do {
 	memcpy(prev, y, len * sizeof(*y));
