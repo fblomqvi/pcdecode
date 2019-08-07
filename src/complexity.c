@@ -1,19 +1,19 @@
 /* complexity.c
-   Copyright (C) 2019 Ferdinand Blomqvist
-
-   This program is free software: you can redistribute it and/or modify it
-   under the terms of the GNU General Public License version 2 as published by
-   the Free Software Foundation.
-
-   This program is distributed in the hope that it will be useful, but WITHOUT
-   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-   FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
-   more details.
-
-   You should have received a copy of the GNU General Public License along with
-   this program. If not, see <http://www.gnu.org/licenses/>.
-
-   Written by Ferdinand Blomqvist. */
+ * Copyright (C) 2019 Ferdinand Blomqvist
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as published by
+ * the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Written by Ferdinand Blomqvist. */
 
 #include "complexity.h"
 #include "gen_errors.h"
@@ -29,22 +29,22 @@
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
 struct wspace {
-	uint16_t*	c;		/* sent codeword */
-	uint16_t*	r;		/* received word */
-	int* 		errlocs;
+	uint16_t *c;    /* sent codeword */
+	uint16_t *r;    /* received word */
+	int *errlocs;
 };
 
 struct thread_args {
-	int (*decode)(struct pc*, uint16_t*, struct stats*);
-	struct pc*	pc;
-	struct wspace*	ws;
-	gsl_rng* 	rng;
-	struct stats 	s;
+	int (*decode)(struct pc *, uint16_t *, struct stats *);
+	struct pc *pc;
+	struct wspace *ws;
+	gsl_rng *rng;
+	struct stats s;
 };
 
-static struct wspace* alloc_ws(int len)
+static struct wspace *alloc_ws(int len)
 {
-	struct wspace* ws;
+	struct wspace *ws;
 
 	ws = calloc(1, sizeof(*ws));
 	if (!ws)
@@ -69,7 +69,7 @@ err:
 	return NULL;
 }
 
-static void free_ws(struct wspace* ws)
+static void free_ws(struct wspace *ws)
 {
 	if (!ws)
 		return;
@@ -79,11 +79,11 @@ static void free_ws(struct wspace* ws)
 	free(ws);
 }
 
-static void print_start(FILE* file, struct pc* pc,
-			const char* prefix, unsigned long seed,
-			size_t nthreads, const char* alg)
+static void print_start(FILE *file, struct pc *pc,
+			const char *prefix, unsigned long seed,
+			size_t nthreads, const char *alg)
 {
-	static const char* const col_heads[] = {
+	static const char *const col_heads[] = {
 		"number of errors in codeword",
 		"number of codewords",
 		"viable strategies",
@@ -103,7 +103,7 @@ static void print_start(FILE* file, struct pc* pc,
 		fprintf(file, "%s(%zu) %s\n", prefix, i + 1, col_heads[i]);
 }
 
-static void print_stats(FILE* file, struct stats* s, int errs)
+static void print_stats(FILE *file, struct stats *s, int errs)
 {
 	fprintf(file, "%d %zu %zu %zu %zu %zu %zu %zu %zu\n",
 		errs, s->nwords, s->viable, s->max,
@@ -112,14 +112,14 @@ static void print_stats(FILE* file, struct stats* s, int errs)
 }
 
 /* Test up to error correction capacity */
-static int test_uc(struct thread_args* args, int trials, int errs)
+static int test_uc(struct thread_args *args, int trials, int errs)
 {
-	struct stats* s = &args->s;
-	struct pc* pc = args->pc;
-	struct wspace* ws = args->ws;
-	int* errlocs = ws->errlocs;
-	uint16_t* c = ws->c;
-	uint16_t* r = ws->r;
+	struct stats *s = &args->s;
+	struct pc *pc = args->pc;
+	struct wspace *ws = args->ws;
+	int *errlocs = ws->errlocs;
+	uint16_t *c = ws->c;
+	uint16_t *r = ws->r;
 	int len = pc_len(pc);
 
 	memset(s, 0, sizeof(*s));
@@ -139,7 +139,7 @@ static int test_uc(struct thread_args* args, int trials, int errs)
 	return s->dwrong;
 }
 
-static void free_stuff(struct thread_args* args, int nthreads)
+static void free_stuff(struct thread_args *args, int nthreads)
 {
 	for (int i = 0; i < nthreads; i++) {
 		pc_free(args[i].pc);
@@ -148,14 +148,15 @@ static void free_stuff(struct thread_args* args, int nthreads)
 	}
 }
 
-static int alloc_stuff(struct thread_args* args, int nthreads, struct options* opt)
+static int alloc_stuff(struct thread_args *args, int nthreads, struct options *opt)
 {
 	memset(args, 0, nthreads * sizeof(*args));
 
 	for (int i = 0; i < nthreads; i++) {
 		args[i].pc = pc_init(opt->symsize, opt->gfpoly, opt->r_fcr,
-				opt->r_prim, opt->r_nroots, opt->c_fcr,
-				opt->c_prim, opt->c_nroots, opt->rows, opt->cols);
+				     opt->r_prim, opt->r_nroots, opt->c_fcr,
+				     opt->c_prim, opt->c_nroots, opt->rows,
+				     opt->cols);
 		if (!args[i].pc)
 			goto err;
 
@@ -178,7 +179,7 @@ err:
 	return -1;
 }
 
-static void consolidate_stats(struct thread_args* args, int nthreads, int errs)
+static void consolidate_stats(struct thread_args *args, int nthreads, int errs)
 {
 	for (int i = 1; i < nthreads; i++)
 		stats_add(&args[0].s, &args[i].s);
@@ -186,17 +187,16 @@ static void consolidate_stats(struct thread_args* args, int nthreads, int errs)
 	print_stats(stdout, &args[0].s, errs);
 }
 
-static void test_mt(struct thread_args* args, int nthreads, int errs, int trials)
+static void test_mt(struct thread_args *args, int nthreads, int errs, int trials)
 {
 	#pragma omp parallel for
-	for (int i = 0; i < nthreads; i++) {
+	for (int i = 0; i < nthreads; i++)
 		test_uc(args + i, trials, errs);
-	}
 
 	consolidate_stats(args, nthreads, errs);
 }
 
-int run_complexity(struct options* opt)
+int run_complexity(struct options *opt)
 {
 	struct thread_args args[opt->nthreads];
 

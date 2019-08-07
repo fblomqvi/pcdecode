@@ -1,26 +1,26 @@
 /* gen_errors.c
-   Copyright (C) 2019 Ferdinand Blomqvist
-
-   This program is free software: you can redistribute it and/or modify it
-   under the terms of the GNU General Public License version 2 as published by
-   the Free Software Foundation.
-
-   This program is distributed in the hope that it will be useful, but WITHOUT
-   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-   FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
-   more details.
-
-   You should have received a copy of the GNU General Public License along with
-   this program. If not, see <http://www.gnu.org/licenses/>.
-
-   Written by Ferdinand Blomqvist. */
+ * Copyright (C) 2019 Ferdinand Blomqvist
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as published by
+ * the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Written by Ferdinand Blomqvist. */
 
 #include "gen_errors.h"
 #include <string.h>
 #include <stdlib.h>
 
-static void gen_random_cword(struct pc* pc, uint16_t* c,
-				const gsl_rng* rng)
+static void gen_random_cword(struct pc *pc, uint16_t *c,
+			     const gsl_rng *rng)
 {
 	int nn = pc->row_code->nn;
 	int rdlen = pc->cols - pc->row_code->nroots;
@@ -42,8 +42,8 @@ static void gen_random_cword(struct pc* pc, uint16_t* c,
  * 0 if there is no error in this position;
  * 1 if there is a symbol error in this position;
  */
-void get_rcw_we(struct pc* pc, uint16_t* c, uint16_t* r,
-		int errs, int* errlocs, const gsl_rng* rng)
+void get_rcw_we(struct pc *pc, uint16_t *c, uint16_t *r,
+		int errs, int *errlocs, const gsl_rng *rng)
 {
 	int nn = pc->row_code->nn;
 	int len = pc_len(pc);
@@ -75,8 +75,8 @@ void get_rcw_we(struct pc* pc, uint16_t* c, uint16_t* r,
 
 
 /* Returns the number of errors */
-int get_rcw_channel(struct pc* pc, uint16_t* c, uint16_t* r,
-			double p, const gsl_rng* rng)
+int get_rcw_channel(struct pc *pc, uint16_t *c, uint16_t *r,
+		    double p, const gsl_rng *rng)
 {
 	int nn = pc->row_code->nn;
 	int len = pc_len(pc);

@@ -1,19 +1,19 @@
 /* Channel simulations with product codes.
-   Copyright (C) 2019 Ferdinand Blomqvist
-
-   This program is free software: you can redistribute it and/or modify it
-   under the terms of the GNU General Public License version 2 as published by
-   the Free Software Foundation.
-
-   This program is distributed in the hope that it will be useful, but WITHOUT
-   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-   FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
-   more details.
-
-   You should have received a copy of the GNU General Public License along with
-   this program. If not, see <http://www.gnu.org/licenses/>.
-
-   Written by Ferdinand Blomqvist. */
+ * Copyright (C) 2019 Ferdinand Blomqvist
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as published by
+ * the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Written by Ferdinand Blomqvist. */
 
 #include "dbg.h"
 #include "version.h"
@@ -31,12 +31,10 @@
 #include <math.h>
 #include <assert.h>
 
-static int print_help(FILE* file)
+static int print_help(FILE *file)
 {
-    static const char* formatstr =
-"Usage: %s [OPTION]...\n\n%s\n";
-
-    static const char* helpstr =
+	static const char *formatstr = "Usage: %s [OPTION]...\n\n%s\n";
+	static const char *helpstr =
 "Run simulation with product codes. The component codes are Reed-Solomon\n"
 "codes over fields of size 2^m and the channel is a q-ary symmetric\n"
 "channel. Outputs to stdout\n\n"
@@ -71,34 +69,34 @@ static int print_help(FILE* file)
 "      --help                   Display this help and exit.\n"
 "      --version                Output version information and exit.\n";
 
-    return (fprintf(file, formatstr, PROGRAM_NAME, helpstr) < 0)
-                ? EXIT_FAILURE : EXIT_SUCCESS;
+	return (fprintf(file, formatstr, PROGRAM_NAME, helpstr) < 0)
+	       ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-static void parse_cmdline(int argc, char* const argv[], struct options* opt)
+static void parse_cmdline(int argc, char *const argv[], struct options *opt)
 {
-	static const char* optstring = "a:g:n:c:r:R:S:s:b:e:t:h:E:f:T:";
+	static const char *optstring = "a:g:n:c:r:R:S:s:b:e:t:h:E:f:T:";
 	static struct option longopt[] = {
-		{"algorithm", required_argument, NULL, 'a'},
-		{"gfpoly", required_argument, NULL, 'g'},
-		{"num-words", required_argument, NULL, 'n'},
-		{"min-errors", required_argument, NULL, 'E'},
-		{"fer-cutoff", required_argument, NULL, 'f'},
-		{"threads", required_argument, NULL, 'T'},
-		{"cols", required_argument, NULL, 'c'},
-		{"rows", required_argument, NULL, 'r'},
-		{"r-nroots", required_argument, NULL, 'U'},
-		{"c-nroots", required_argument, NULL, 'u'},
-		{"p-begin", required_argument, NULL, 'b'},
-		{"p-end", required_argument, NULL, 'e'},
-		{"p-step", required_argument, NULL, 't'},
-		{"p-halve-at", required_argument, NULL, 'h'},
-		{"rng", required_argument, NULL, 'R'},
-		{"seed", required_argument, NULL, 'S'},
-		{"sym-size", required_argument, NULL, 's'},
-		{"help", no_argument, NULL, 'H'},
-		{"version", no_argument, NULL, 'V'},
-		{0, 0, 0, 0}
+		{ "algorithm",	required_argument, NULL, 'a' },
+		{ "gfpoly",	required_argument, NULL, 'g' },
+		{ "num-words",	required_argument, NULL, 'n' },
+		{ "min-errors", required_argument, NULL, 'E' },
+		{ "fer-cutoff", required_argument, NULL, 'f' },
+		{ "threads",	required_argument, NULL, 'T' },
+		{ "cols",	required_argument, NULL, 'c' },
+		{ "rows",	required_argument, NULL, 'r' },
+		{ "r-nroots",	required_argument, NULL, 'U' },
+		{ "c-nroots",	required_argument, NULL, 'u' },
+		{ "p-begin",	required_argument, NULL, 'b' },
+		{ "p-end",	required_argument, NULL, 'e' },
+		{ "p-step",	required_argument, NULL, 't' },
+		{ "p-halve-at", required_argument, NULL, 'h' },
+		{ "rng",	required_argument, NULL, 'R' },
+		{ "seed",	required_argument, NULL, 'S' },
+		{ "sym-size",	required_argument, NULL, 's' },
+		{ "help",	no_argument,	   NULL, 'H' },
+		{ "version",	no_argument,	   NULL, 'V' },
+		{ 0,		0,		   0,	 0   }
 	};
 
 	// Setting default options
@@ -119,89 +117,86 @@ static void parse_cmdline(int argc, char* const argv[], struct options* opt)
 
 	// Parsing the command line
 	int ch;
-	char* endptr;
-	while((ch = getopt_long(argc, argv, optstring, longopt, NULL)) != -1)
-	{
-		switch(ch)
-		{
+	char *endptr;
+	while ((ch = getopt_long(argc, argv, optstring, longopt, NULL)) != -1) {
+		switch (ch) {
 		case 'a':
 		{
-			if(!strcmp(optarg, "list")) {
+			if (!strcmp(optarg, "list")) {
 				exit(algorithm_print_names(stdout));
 			} else {
 				opt->alg = algorithm_by_name(optarg);
 				check(opt->alg, "invalid argument to option "
-						"'%c': '%s'", ch, optarg);
+				      "'%c': '%s'", ch, optarg);
 			}
 			break;
 		}
 		case 'c':
 			opt->cols = strtoul(optarg, &endptr, 10);
 			check(*endptr == '\0'
-				&& !(errno == ERANGE && opt->cols == ULONG_MAX),
-				"invalid argument to option '%c': '%s'", ch, optarg);
+			      && !(errno == ERANGE && opt->cols == ULONG_MAX),
+			      "invalid argument to option '%c': '%s'", ch, optarg);
 			break;
 		case 'g':
 			opt->gfpoly = strtoul(optarg, &endptr, 0);
 			check(*endptr == '\0'
-				&& !(errno == ERANGE && opt->gfpoly == ULONG_MAX),
-				"invalid argument to option '%c': '%s'", ch, optarg);
+			      && !(errno == ERANGE && opt->gfpoly == ULONG_MAX),
+			      "invalid argument to option '%c': '%s'", ch, optarg);
 			break;
 		case 'n':
 			opt->cword_num = strtoul(optarg, &endptr, 10);
 			check(*endptr == '\0'
-				&& !(errno == ERANGE && opt->cword_num == ULONG_MAX),
-				"invalid argument to option '%c': '%s'", ch, optarg);
+			      && !(errno == ERANGE && opt->cword_num == ULONG_MAX),
+			      "invalid argument to option '%c': '%s'", ch, optarg);
 			break;
 		case 'E':
 			opt->min_errs = strtoul(optarg, &endptr, 10);
 			check(*endptr == '\0'
-				&& !(errno == ERANGE && opt->min_errs == ULONG_MAX),
-				"invalid argument to option '%c': '%s'", ch, optarg);
+			      && !(errno == ERANGE && opt->min_errs == ULONG_MAX),
+			      "invalid argument to option '%c': '%s'", ch, optarg);
 			break;
 		case 'f':
 			opt->fer_cutoff = strtod(optarg, &endptr);
 			check(*endptr == '\0' && opt->fer_cutoff >= 0
-				&& !(errno == ERANGE && opt->fer_cutoff == HUGE_VAL),
-				"invalid argument to option '%c': '%s'", ch, optarg);
+			      && !(errno == ERANGE && opt->fer_cutoff == HUGE_VAL),
+			      "invalid argument to option '%c': '%s'", ch, optarg);
 			break;
 		case 'r':
 			opt->rows = strtoul(optarg, &endptr, 10);
 			check(*endptr == '\0'
-				&& !(errno == ERANGE && opt->rows == ULONG_MAX),
-				"invalid argument to option '%c': '%s'", ch, optarg);
+			      && !(errno == ERANGE && opt->rows == ULONG_MAX),
+			      "invalid argument to option '%c': '%s'", ch, optarg);
 			break;
 		case 'b':
 			opt->p_start = strtod(optarg, &endptr);
 			check(*endptr == '\0' && opt->p_start >= 0
-				&& !(errno == ERANGE && opt->p_start == HUGE_VAL),
-				"invalid argument to option '%c': '%s'", ch, optarg);
+			      && !(errno == ERANGE && opt->p_start == HUGE_VAL),
+			      "invalid argument to option '%c': '%s'", ch, optarg);
 			break;
 		case 'e':
 			opt->p_stop = strtod(optarg, &endptr);
 			check(*endptr == '\0' && opt->p_stop >= 0
-				&& !(errno == ERANGE && opt->p_stop == HUGE_VAL),
-				"invalid argument to option '%c': '%s'", ch, optarg);
+			      && !(errno == ERANGE && opt->p_stop == HUGE_VAL),
+			      "invalid argument to option '%c': '%s'", ch, optarg);
 			break;
 		case 't':
 			opt->p_step = strtod(optarg, &endptr);
 			check(*endptr == '\0' && opt->p_step >= 0
-				&& !(errno == ERANGE && opt->p_step == HUGE_VAL),
-				"invalid argument to option '%c': '%s'", ch, optarg);
+			      && !(errno == ERANGE && opt->p_step == HUGE_VAL),
+			      "invalid argument to option '%c': '%s'", ch, optarg);
 			break;
 		case 'h':
 			opt->p_halve_at = strtod(optarg, &endptr);
 			check(*endptr == '\0' && opt->p_halve_at >= 0
-				&& !(errno == ERANGE && opt->p_halve_at == HUGE_VAL),
-				"invalid argument to option '%c': '%s'", ch, optarg);
+			      && !(errno == ERANGE && opt->p_halve_at == HUGE_VAL),
+			      "invalid argument to option '%c': '%s'", ch, optarg);
 			break;
 		case 'R':
 		{
-			const gsl_rng_type** rng_types = gsl_rng_types_setup();
-			if(!strcmp(optarg, "list"))
+			const gsl_rng_type **rng_types = gsl_rng_types_setup();
+			if (!strcmp(optarg, "list")) {
 				exit(print_rngs(stdout, rng_types));
-			else
-			{
+			} else {
 				opt->rng_type = get_rng_type(optarg, rng_types);
 				check(opt->rng_type, "invalid random number generator");
 			}
@@ -210,33 +205,33 @@ static void parse_cmdline(int argc, char* const argv[], struct options* opt)
 		case 'S':
 			opt->seed = strtoul(optarg, &endptr, 10);
 			check(*endptr == '\0'
-				&& !(errno == ERANGE && opt->seed == ULONG_MAX),
-				"invalid argument to option '%c': '%s'", ch, optarg);
+			      && !(errno == ERANGE && opt->seed == ULONG_MAX),
+			      "invalid argument to option '%c': '%s'", ch, optarg);
 			break;
 		case 's':
 			opt->symsize = strtoul(optarg, &endptr, 10);
 			check(*endptr == '\0'
-				&& !(errno == ERANGE && opt->symsize == ULONG_MAX)
-				&& opt->symsize <= 16,
-				"invalid argument to option '%c': '%s'", ch, optarg);
+			      && !(errno == ERANGE && opt->symsize == ULONG_MAX)
+			      && opt->symsize <= 16,
+			      "invalid argument to option '%c': '%s'", ch, optarg);
 			break;
 		case 'U':
 			opt->r_nroots = strtoul(optarg, &endptr, 10);
 			check(*endptr == '\0'
-				&& !(errno == ERANGE && opt->r_nroots == ULONG_MAX),
-				"invalid argument to option '%c': '%s'", ch, optarg);
+			      && !(errno == ERANGE && opt->r_nroots == ULONG_MAX),
+			      "invalid argument to option '%c': '%s'", ch, optarg);
 			break;
 		case 'u':
 			opt->c_nroots = strtoul(optarg, &endptr, 10);
 			check(*endptr == '\0'
-				&& !(errno == ERANGE && opt->c_nroots == ULONG_MAX),
-				"invalid argument to option '%c': '%s'", ch, optarg);
+			      && !(errno == ERANGE && opt->c_nroots == ULONG_MAX),
+			      "invalid argument to option '%c': '%s'", ch, optarg);
 			break;
 		case 'T':
 			opt->nthreads = strtoul(optarg, &endptr, 10);
 			check(*endptr == '\0'
-				&& !(errno == ERANGE && opt->nthreads == ULONG_MAX),
-				"invalid argument to option '%c': '%s'", ch, optarg);
+			      && !(errno == ERANGE && opt->nthreads == ULONG_MAX),
+			      "invalid argument to option '%c': '%s'", ch, optarg);
 			break;
 		case 'H':
 			exit(print_help(stdout));
@@ -269,7 +264,7 @@ error:
 }
 
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
 	struct options opt;
 	int ret = EXIT_FAILURE;
@@ -283,4 +278,3 @@ int main(int argc, char* argv[])
 	ret = run_simulation(&opt);
 	return ret;
 }
-
