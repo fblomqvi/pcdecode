@@ -1,5 +1,8 @@
-/* Complexity simulations with product codes.
+/*
+ * Complexity simulations with product codes.
  * Copyright (C) 2019 Ferdinand Blomqvist
+ *
+ * This file is part of pcdecode.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published by
@@ -13,7 +16,8 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * Written by Ferdinand Blomqvist. */
+ * Written by Ferdinand Blomqvist.
+ */
 
 #include "dbg.h"
 #include "version.h"

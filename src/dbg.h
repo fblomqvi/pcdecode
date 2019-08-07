@@ -1,5 +1,8 @@
-/* Macros for debugging and error handling.
+/*
+ * Macros for debugging and error handling.
  * Copyright (C) 2016 Ferdinand Blomqvist
+ *
+ * This file is part of pcdecode.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published by
@@ -13,14 +16,17 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * Written by Ferdinand Blomqvist. */
+ * Written by Ferdinand Blomqvist.
+ */
 
-/* These debug macros are inspired by the debug macros found in chapter 20 of
+/*
+ * These debug macros are inspired by the debug macros found in chapter 20 of
  * 'Learn C the hard way' by Zed A. Shaw
  * (http://c.learncodethehardway.org/book/ex20.html). I have tweaked and
  * expanded them to my liking. Furthermore I have fixed some possible
  * 'swallowing the semicolon' issues by adding 'do {...} * while(0)' statements
- * to the right places. */
+ * to the right places.
+ */
 
 #ifndef FB_UTILITY_DBG_H
 #define FB_UTILITY_DBG_H
